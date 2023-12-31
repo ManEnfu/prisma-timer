@@ -1,0 +1,12 @@
+target/
+build/
+_build/
+builddir/
+build-aux/app
+.flatpak-builder
+src/config.rs
+*.ui.in~
+*.ui~
+.flatpak
+.vscode
+.fenv

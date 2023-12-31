@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="prisma-timer">
+	<schema id="io.github.manenfu.PrismaTimer" path="/io/github/manenfu/PrismaTimer/">
+	</schema>
+</schemalist>

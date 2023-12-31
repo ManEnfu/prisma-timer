@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=prisma-timer
+Exec=prisma-timer
+Icon=io.github.manenfu.PrismaTimer
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true
