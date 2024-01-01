@@ -25,10 +25,10 @@ mod window;
 use self::application::PrismaTimerApplication;
 use self::window::PrismaTimerWindow;
 
-use config::{GETTEXT_PACKAGE, LOCALEDIR, PKGDATADIR};
+use config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, PKGDATADIR};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
-use gtk::{gio, glib};
 use gtk::prelude::*;
+use gtk::{gio, glib};
 
 fn main() -> glib::ExitCode {
     // Set up gettext translations
@@ -38,7 +38,7 @@ fn main() -> glib::ExitCode {
     textdomain(GETTEXT_PACKAGE).expect("Unable to switch to the text domain");
 
     // Load resources
-    let resources = gio::Resource::load(PKGDATADIR.to_owned() + "/prisma-timer.gresource")
+    let resources = gio::Resource::load(format!("{}/{}.gresource", PKGDATADIR, APP_ID))
         .expect("Could not load resources");
     gio::resources_register(&resources);
 

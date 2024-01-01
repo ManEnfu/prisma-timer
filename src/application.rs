@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-use gtk::prelude::*;
 use adw::subclass::prelude::*;
+use gtk::prelude::*;
 use gtk::{gio, glib};
 
-use crate::config::{VERSION, APP_ID};
+use crate::config::{APP_ID, VERSION};
 use crate::PrismaTimerWindow;
 
 mod imp {
@@ -43,7 +43,7 @@ mod imp {
             self.parent_constructed();
             let obj = self.obj();
             obj.setup_gactions();
-            obj.set_accels_for_action("app.quit", &["<primary>q"]);
+            obj.setup_shortcuts();
         }
     }
 
@@ -95,16 +95,21 @@ impl PrismaTimerApplication {
         self.add_action_entries([quit_action, about_action]);
     }
 
+    fn setup_shortcuts(&self) {
+        self.set_accels_for_action("app.quit", &["<primary>q"]);
+        self.set_accels_for_action("win.show-help-overlay", &["<primary>question"]);
+    }
+
     fn show_about(&self) {
         let window = self.active_window().unwrap();
         let about = adw::AboutWindow::builder()
             .transient_for(&window)
-            .application_name("prisma-timer")
+            .application_name("Prisma Timer")
             .application_icon("io.github.manenfu.PrismaTimer")
-            .developer_name("Unknown")
+            .developer_name("ManEnfu")
             .version(VERSION)
-            .developers(vec!["Unknown"])
-            .copyright("© 2023 Unknown")
+            .developers(vec!["MenEnfu"])
+            .copyright("© 2023 ManEnfu")
             .build();
 
         about.present();

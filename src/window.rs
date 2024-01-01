@@ -18,21 +18,20 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-use gtk::prelude::*;
 use adw::subclass::prelude::*;
+use gtk::prelude::*;
 use gtk::{gio, glib};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/io/github/manenfu/PrismaTimer/window.ui")]
+    #[template(resource = "/io/github/manenfu/PrismaTimer/ui/window.ui")]
     pub struct PrismaTimerWindow {
-        // Template widgets
         #[template_child]
-        pub header_bar: TemplateChild<adw::HeaderBar>,
+        pub sidebar_header_bar: TemplateChild<adw::HeaderBar>,
         #[template_child]
-        pub label: TemplateChild<gtk::Label>,
+        pub content_header_bar: TemplateChild<adw::HeaderBar>,
     }
 
     #[glib::object_subclass]
@@ -50,7 +49,14 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for PrismaTimerWindow {}
+    impl ObjectImpl for PrismaTimerWindow {
+        fn constructed(&self) {
+            self.parent_constructed();
+            let obj = self.obj();
+
+            obj.setup_gactions();
+        }
+    }
     impl WidgetImpl for PrismaTimerWindow {}
     impl WindowImpl for PrismaTimerWindow {}
     impl ApplicationWindowImpl for PrismaTimerWindow {}
@@ -59,7 +65,8 @@ mod imp {
 
 glib::wrapper! {
     pub struct PrismaTimerWindow(ObjectSubclass<imp::PrismaTimerWindow>)
-        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,        @implements gio::ActionGroup, gio::ActionMap;
+        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
+        @implements gio::ActionGroup, gio::ActionMap;
 }
 
 impl PrismaTimerWindow {
@@ -67,5 +74,13 @@ impl PrismaTimerWindow {
         glib::Object::builder()
             .property("application", application)
             .build()
+    }
+
+    fn setup_gactions(&self) {
+        let shortcuts_window =
+            gtk::Builder::from_resource("/io/github/manenfu/PrismaTimer/ui/shortcuts_window.ui")
+                .object::<gtk::ShortcutsWindow>("shortcuts_window")
+                .expect("Error building shortcuts window.");
+        self.set_help_overlay(Some(&shortcuts_window));
     }
 }
