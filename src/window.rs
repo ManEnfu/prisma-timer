@@ -1,26 +1,7 @@
-/* window.rs
- *
- * Copyright 2023 Unknown
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
+use crate::ui;
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
-use gtk::{gio, glib};
+use gtk::{gdk, gio, glib};
 
 mod imp {
     use super::*;
@@ -32,6 +13,8 @@ mod imp {
         pub sidebar_header_bar: TemplateChild<adw::HeaderBar>,
         #[template_child]
         pub content_header_bar: TemplateChild<adw::HeaderBar>,
+        #[template_child]
+        pub timer_face: TemplateChild<ui::TimerFace>,
     }
 
     #[glib::object_subclass]
@@ -55,8 +38,10 @@ mod imp {
             let obj = self.obj();
 
             obj.setup_gactions();
+            obj.setup_event_controllers();
         }
     }
+
     impl WidgetImpl for PrismaTimerWindow {}
     impl WindowImpl for PrismaTimerWindow {}
     impl ApplicationWindowImpl for PrismaTimerWindow {}
@@ -82,5 +67,18 @@ impl PrismaTimerWindow {
                 .object::<gtk::ShortcutsWindow>("shortcuts_window")
                 .expect("Error building shortcuts window.");
         self.set_help_overlay(Some(&shortcuts_window));
+    }
+
+    fn setup_event_controllers(&self) {
+        // Focus on timer face if user clicks on anywhere on window that has no
+        // interactable widgets.
+        let gestures = gtk::GestureClick::new();
+        gestures.set_touch_only(false);
+        gestures.set_button(gdk::BUTTON_PRIMARY);
+        gestures.set_propagation_phase(gtk::PropagationPhase::Capture);
+        gestures.connect_pressed(glib::clone!(@weak self as obj => move |_, _, _, _| {
+            obj.imp().timer_face.grab_focus();
+        }));
+        self.add_controller(gestures);
     }
 }

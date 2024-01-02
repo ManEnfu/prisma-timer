@@ -55,10 +55,6 @@
                         <property name="icon-name">sidebar-show-symbolic</property>
                         <property name="active">True</property>
                         <property name="visible">False</property>
-                        <!-- <property name="visible" -->
-                        <!--           bind-source="split_view" -->
-                        <!--           bind-property="collapsed" -->
-                        <!--           bind-flags="sync-create"/> -->
                       </object>
                     </child>
                     <child type="end">
@@ -72,11 +68,7 @@
                   </object>
                 </child>
                 <property name="content">
-                  <object class="GtkLabel" id="label">
-                    <property name="label">Timer</property>
-                    <style>
-                      <class name="title-1"/>
-                    </style>
+                  <object class="PtTimerFace" id="timer_face">
                   </object>
                 </property>
               </object>

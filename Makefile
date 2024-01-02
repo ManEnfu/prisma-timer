@@ -1,4 +1,7 @@
-fenv-setup:
+fenv-clean:
+	rm -rf .fenv
+
+fenv-setup: fenv-clean
 	fenv gen ./build-aux/io.github.manenfu.PrismaTimer.json
 	fenv exec -- meson --prefix=/app _build
 

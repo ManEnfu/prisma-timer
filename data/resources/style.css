@@ -1,0 +1,13 @@
+.timer-face .time-label {
+  font-size: 90px;
+  font-feature-settings: "tnum" 1;
+  font-weight: 400;
+}
+
+.timer-face.wait .time-label {
+  color: @destructive_color;
+}
+
+.timer-face.ready .time-label {
+  color: @success_color;
+}

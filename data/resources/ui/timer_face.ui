@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <template class="PtTimerFace" parent="AdwBin">
+    <property name="focusable">True</property>
+    <property name="focus-on-click">True</property>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">horizontal</property>
+        <property name="halign">center</property>
+        <child>
+          <object class="GtkLabel" id="minutes">
+            <property name="label">4</property>
+            <style>
+              <class name="time-label"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="colon">
+            <property name="label">∶</property>
+            <style>
+              <class name="time-label"/>
+              <class name="colon"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="seconds">
+            <property name="label">20</property>
+            <style>
+              <class name="time-label"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
