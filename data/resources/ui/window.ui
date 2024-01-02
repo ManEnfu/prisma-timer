@@ -3,6 +3,7 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="Adw" version="1.0"/>
   <template class="PrismaTimerWindow" parent="AdwApplicationWindow">
+    <property name="title">Prisma Timer</property>
     <property name="width-request">280</property>
     <property name="height-request">200</property>
     <property name="default-width">800</property>
@@ -16,7 +17,7 @@
     </child>
     <property name="content">
       <object class="AdwOverlaySplitView" id="split_view">
-        <property name="min-sidebar-width">200sp</property>
+        <property name="min-sidebar-width">240sp</property>
         <property name="max-sidebar-width">360sp</property>
         <property name="show-sidebar"
                   bind-source="toggle_pane_button"
@@ -32,10 +33,13 @@
                   </object>
                 </child>
                 <property name="content">
-                  <object class="GtkLabel">
-                    <property name="label">Session</property>
+                  <object class="AdwStatusPage" id="search_result_empty">
+                    <property name="icon-name">preferences-system-time-symbolic</property>
+                    <property name="title">No solves</property>
+                    <property name="description">Get started by starting the timer.</property>
+                    <property name="vexpand">true</property>
                     <style>
-                      <class name="title-1"/>
+                      <class name="compact"/>
                     </style>
                   </object>
                 </property>
@@ -89,7 +93,7 @@
         <attribute name="action">win.show-help-overlay</attribute>
       </item>
       <item>
-        <attribute name="label" translatable="yes">_About Prisma-timer</attribute>
+        <attribute name="label" translatable="yes">_About Prisma Timer</attribute>
         <attribute name="action">app.about</attribute>
       </item>
     </section>
