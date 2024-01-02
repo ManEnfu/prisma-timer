@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=prisma-timer
+Name=Prisma Timer
 Exec=prisma-timer
 Icon=io.github.manenfu.PrismaTimer
 Terminal=false
