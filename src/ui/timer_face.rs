@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::data::{self, TimerSimpleState};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
@@ -21,30 +23,42 @@ mod imp {
         pub colon: TemplateChild<gtk::Label>,
         #[template_child]
         pub seconds: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub point: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub centis: TemplateChild<gtk::Label>,
 
         #[property(get, set = Self::set_timer_state_machine)]
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
-        timer_state_machine_handler: RefCell<Option<glib::SignalHandlerId>>,
+        timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
     }
 
     impl TimerFace {
         fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
             let obj = self.obj();
+            let mut handlers = self.timer_state_machine_handlers.borrow_mut();
 
             if let Some(osm) = self.timer_state_machine.take() {
-                if let Some(id) = self.timer_state_machine_handler.take() {
+                for id in handlers.drain(..) {
                     osm.disconnect(id);
                 }
             }
 
             if let Some(sm) = &v {
-                sm.connect_closure(
+                handlers.push(sm.connect_closure(
                     "state-changed",
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
                         obj.timer_state_changed_cb(sm.simple_state());
                     }),
-                );
+                ));
+                handlers.push(sm.connect_closure(
+                    "tick",
+                    false,
+                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
+                        obj.set_time_label(sm.duration());
+                    }),
+                ));
             }
             self.timer_state_machine.replace(v);
         }
@@ -101,6 +115,7 @@ mod imp {
 
             obj.add_css_class("timer-face");
 
+            obj.set_time_label(Duration::ZERO);
             obj.setup_event_controllers();
             obj.setup_callbacks();
         }
@@ -163,7 +178,7 @@ impl TimerFace {
 
     fn setup_callbacks(&self) {}
 
-    pub fn timer_state_changed_cb(&self, state: TimerSimpleState) {
+    pub(self) fn timer_state_changed_cb(&self, state: TimerSimpleState) {
         match state {
             TimerSimpleState::Idle => {
                 self.set_color_normal();
@@ -196,5 +211,25 @@ impl TimerFace {
     fn set_color_ready(&self) {
         self.remove_css_class("wait");
         self.add_css_class("ready");
+    }
+
+    fn set_time_label(&self, duration: Duration) {
+        let imp = self.imp();
+        let s = duration.as_secs();
+        let m = s / 60;
+        let s = s % 60;
+        let c = duration.subsec_millis() / 10;
+
+        if m > 0 {
+            imp.minutes.set_visible(true);
+            imp.colon.set_visible(true);
+            imp.minutes.set_label(&format!("{:0>1}", m));
+            imp.seconds.set_label(&format!("{:0>2}", s));
+        } else {
+            imp.minutes.set_visible(false);
+            imp.colon.set_visible(false);
+            imp.seconds.set_label(&format!("{:0>1}", s));
+        }
+        imp.centis.set_label(&format!("{:0>2}", c));
     }
 }

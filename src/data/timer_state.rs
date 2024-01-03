@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use gtk::glib;
 
 /// The representation of the state of a timer.
@@ -9,7 +11,10 @@ pub enum TimerState {
         timeout_id: glib::SourceId,
     },
     Ready,
-    Timing,
+    Timing {
+        last_tick: Instant,
+        tick_cb_id: glib::SourceId,
+    },
     Finished,
 }
 
@@ -19,7 +24,7 @@ impl TimerState {
             Self::Idle => TimerSimpleState::Idle,
             Self::Wait { timeout_id: _ } => TimerSimpleState::Wait,
             Self::Ready => TimerSimpleState::Ready,
-            Self::Timing => TimerSimpleState::Timing,
+            Self::Timing { .. } => TimerSimpleState::Timing,
             Self::Finished => TimerSimpleState::Finished,
         }
     }

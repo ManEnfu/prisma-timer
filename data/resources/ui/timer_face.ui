@@ -11,7 +11,7 @@
         <property name="halign">center</property>
         <child>
           <object class="GtkLabel" id="minutes">
-            <property name="label">4</property>
+            <property name="label">0</property>
             <style>
               <class name="time-label"/>
             </style>
@@ -28,7 +28,24 @@
         </child>
         <child>
           <object class="GtkLabel" id="seconds">
-            <property name="label">20</property>
+            <property name="label">00</property>
+            <style>
+              <class name="time-label"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="point">
+            <property name="label">.</property>
+            <style>
+              <class name="time-label"/>
+              <class name="colon"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="centis">
+            <property name="label">00</property>
             <style>
               <class name="time-label"/>
             </style>
