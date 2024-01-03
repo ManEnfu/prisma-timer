@@ -76,9 +76,11 @@ impl TimerStateMachine {
     pub fn press(&self) {
         let imp = self.imp();
         let mut state_changed = true;
+        let mut tick = false;
 
         {
             let mut state = imp.state.write().unwrap();
+            let mut duration = imp.duration.write().unwrap();
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
@@ -94,10 +96,12 @@ impl TimerStateMachine {
                     }
                 }
                 TimerState::Timing {
-                    last_tick: _,
+                    last_tick,
                     tick_cb_id,
                 } => {
                     tick_cb_id.remove();
+                    *duration += Instant::now() - last_tick;
+                    tick = true;
                     TimerState::Finished
                 }
                 s => {
@@ -114,6 +118,9 @@ impl TimerStateMachine {
 
         if state_changed {
             self.emit_by_name::<()>("state-changed", &[])
+        }
+        if tick {
+            self.emit_by_name::<()>("tick", &[])
         }
     }
 
