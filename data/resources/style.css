@@ -4,6 +4,12 @@
   font-weight: 400;
 }
 
+.timer-face .time-label.small {
+  font-size: 54px;
+  font-feature-settings: "tnum" 1;
+  font-weight: 400;
+}
+
 .timer-face.wait .time-label {
   color: @destructive_color;
 }
