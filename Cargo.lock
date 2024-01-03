@@ -682,6 +682,7 @@ dependencies = [
  "gtk4",
  "libadwaita",
  "log",
+ "once_cell",
 ]
 
 [[package]]

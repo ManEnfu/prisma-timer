@@ -73,6 +73,10 @@
                 </child>
                 <property name="content">
                   <object class="PtTimerFace" id="timer_face">
+                    <property name="timer-state-machine"
+                              bind-source="PrismaTimerWindow"
+                              bind-property="timer-state-machine"
+                              bind-flags="sync-create"/>
                   </object>
                 </property>
               </object>

@@ -1,13 +1,16 @@
-use crate::ui;
+use crate::{data, ui};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, gio, glib};
 
 mod imp {
+    use std::cell::RefCell;
+
     use super::*;
 
-    #[derive(Debug, Default, gtk::CompositeTemplate)]
+    #[derive(Debug, Default, gtk::CompositeTemplate, glib::Properties)]
     #[template(resource = "/io/github/manenfu/PrismaTimer/ui/window.ui")]
+    #[properties(wrapper_type = super::PrismaTimerWindow)]
     pub struct PrismaTimerWindow {
         #[template_child]
         pub sidebar_header_bar: TemplateChild<adw::HeaderBar>,
@@ -15,6 +18,9 @@ mod imp {
         pub content_header_bar: TemplateChild<adw::HeaderBar>,
         #[template_child]
         pub timer_face: TemplateChild<ui::TimerFace>,
+
+        #[property(get, set)]
+        pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
     }
 
     #[glib::object_subclass]
@@ -33,9 +39,23 @@ mod imp {
     }
 
     impl ObjectImpl for PrismaTimerWindow {
+        fn properties() -> &'static [glib::ParamSpec] {
+            Self::derived_properties()
+        }
+
+        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
+            self.derived_set_property(id, value, pspec)
+        }
+
+        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            self.derived_property(id, pspec)
+        }
+
         fn constructed(&self) {
             self.parent_constructed();
             let obj = self.obj();
+
+            obj.set_timer_state_machine(data::TimerStateMachine::new());
 
             obj.setup_gactions();
             obj.setup_event_controllers();
