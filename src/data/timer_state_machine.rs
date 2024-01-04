@@ -73,6 +73,7 @@ impl TimerStateMachine {
         imp.duration.read().unwrap().to_owned()
     }
 
+    /// Called when timer trigger is pressed.
     pub fn press(&self) {
         let imp = self.imp();
         let mut state_changed = true;
@@ -124,6 +125,7 @@ impl TimerStateMachine {
         }
     }
 
+    /// Called when timer trigger is released.
     pub fn release(&self) {
         let imp = self.imp();
         let mut state_changed = true;
@@ -170,6 +172,7 @@ impl TimerStateMachine {
         }
     }
 
+    /// Called when duration of a trigger press exceeds certain threshold.
     pub fn press_timeout(&self) {
         let imp = self.imp();
         let mut state_changed = true;
@@ -207,6 +210,7 @@ impl TimerStateMachine {
         }
     }
 
+    /// Called on every tick during `Timing` state.
     pub fn tick(&self) {
         let imp = self.imp();
 

@@ -2,6 +2,7 @@ mod application;
 mod config;
 mod data;
 mod ui;
+mod util;
 mod window;
 
 use self::application::PrismaTimerApplication;

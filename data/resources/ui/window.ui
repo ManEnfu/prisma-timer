@@ -11,8 +11,7 @@
     <child>
       <object class="AdwBreakpoint">
         <condition> max-width: 600sp</condition>
-        <setter object="split_view" property="collapsed">True</setter>
-        <setter object="toggle_pane_button" property="visible">True</setter>
+        <setter object="PrismaTimerWindow" property="should_collapse">True</setter>
       </object>
     </child>
     <property name="content">
@@ -23,6 +22,12 @@
                   bind-source="toggle_pane_button"
                   bind-property="active"
                   bind-flags="sync-create|bidirectional"/>
+        <binding name="collapsed">
+          <closure type="gboolean" function="or_boolean">
+            <lookup name="should-collapse">PrismaTimerWindow</lookup>
+            <lookup name="focus-mode">PrismaTimerWindow</lookup>
+          </closure>
+        </binding>
         <property name="sidebar">
           <object class="AdwNavigationPage">
             <property name="title" translatable="yes">Session</property>
@@ -58,7 +63,14 @@
                       <object class="GtkToggleButton" id="toggle_pane_button">
                         <property name="icon-name">sidebar-show-symbolic</property>
                         <property name="active">True</property>
-                        <property name="visible">False</property>
+                        <binding name="visible">
+                          <closure type="gboolean" function="and_boolean">
+                            <lookup name="should-collapse">PrismaTimerWindow</lookup>
+                            <closure type="gboolean" function="invert_boolean">
+                              <lookup name="focus-mode">PrismaTimerWindow</lookup>
+                            </closure>
+                          </closure>
+                        </binding>
                       </object>
                     </child>
                     <child type="end">
@@ -67,6 +79,10 @@
                         <property name="icon-name">open-menu-symbolic</property>
                         <property name="tooltip-text" translatable="yes">Menu</property>
                         <property name="menu-model">primary_menu</property>
+                        <property name="visible"
+                                  bind-source="PrismaTimerWindow"
+                                  bind-property="focus-mode"
+                                  bind-flags="sync-create|invert-boolean"/>
                       </object>
                     </child>
                   </object>

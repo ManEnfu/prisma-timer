@@ -1,10 +1,13 @@
+use crate::data::TimerSimpleState;
 use crate::{data, ui};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, gio, glib};
 
 mod imp {
-    use std::cell::RefCell;
+    use std::cell::{Cell, RefCell};
+
+    use crate::util::TemplateCallbacks;
 
     use super::*;
 
@@ -19,8 +22,44 @@ mod imp {
         #[template_child]
         pub timer_face: TemplateChild<ui::TimerFace>,
 
-        #[property(get, set)]
+        #[template_child]
+        pub split_view: TemplateChild<adw::OverlaySplitView>,
+
+        /// The state machine is shared between widgets within this window.
+        #[property(get, set = Self::set_timer_state_machine)]
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
+        timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+
+        /// If set to true, this would hide most widgets aside from ones
+        /// related to timing (i.e. sidebar).
+        #[property(get, set)]
+        pub focus_mode: Cell<bool>,
+        #[property(get, set)]
+        pub should_collapse: Cell<bool>,
+    }
+
+    impl PrismaTimerWindow {
+        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
+            let obj = self.obj();
+            let mut handlers = self.timer_state_machine_handlers.borrow_mut();
+
+            if let Some(osm) = self.timer_state_machine.take() {
+                for id in handlers.drain(..) {
+                    osm.disconnect(id);
+                }
+            }
+
+            if let Some(sm) = &v {
+                handlers.push(sm.connect_closure(
+                    "state-changed",
+                    false,
+                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
+                        obj.timer_state_changed_cb(sm.simple_state());
+                    }),
+                ));
+            }
+            self.timer_state_machine.replace(v);
+        }
     }
 
     #[glib::object_subclass]
@@ -31,6 +70,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
+            TemplateCallbacks::bind_template_callbacks(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -100,5 +140,21 @@ impl PrismaTimerWindow {
             obj.imp().timer_face.grab_focus();
         }));
         self.add_controller(gestures);
+    }
+
+    fn timer_state_changed_cb(&self, state: TimerSimpleState) {
+        let imp = self.imp();
+
+        match state {
+            TimerSimpleState::Ready | TimerSimpleState::Timing => {
+                if imp.split_view.is_collapsed() {
+                    imp.split_view.set_show_sidebar(false);
+                }
+                self.set_focus_mode(true);
+            }
+            _ => {
+                self.set_focus_mode(false);
+            }
+        }
     }
 }
