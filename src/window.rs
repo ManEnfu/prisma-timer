@@ -1,4 +1,4 @@
-use crate::data::TimerSimpleState;
+use crate::data::TimerState;
 use crate::{data, ui};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
@@ -25,10 +25,22 @@ mod imp {
         #[template_child]
         pub split_view: TemplateChild<adw::OverlaySplitView>,
 
+        #[template_child]
+        pub sidebar_stack: TemplateChild<gtk::Stack>,
+        #[template_child]
+        pub list_view: TemplateChild<gtk::ListView>,
+
         /// The state machine is shared between widgets within this window.
         #[property(get, set = Self::set_timer_state_machine)]
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+
+        #[property(get, set)]
+        pub session: RefCell<Option<data::Session>>,
+        #[property(get, set)]
+        pub session_sort_model: RefCell<Option<gtk::SortListModel>>,
+        #[property(get, set)]
+        pub session_selection_model: RefCell<Option<gtk::NoSelection>>,
 
         /// If set to true, this would hide most widgets aside from ones
         /// related to timing (i.e. sidebar).
@@ -70,6 +82,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
+            klass.bind_template_instance_callbacks();
             TemplateCallbacks::bind_template_callbacks(klass);
         }
 
@@ -78,19 +91,8 @@ mod imp {
         }
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for PrismaTimerWindow {
-        fn properties() -> &'static [glib::ParamSpec] {
-            Self::derived_properties()
-        }
-
-        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
-            self.derived_set_property(id, value, pspec)
-        }
-
-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-            self.derived_property(id, pspec)
-        }
-
         fn constructed(&self) {
             self.parent_constructed();
             let obj = self.obj();
@@ -99,6 +101,7 @@ mod imp {
 
             obj.setup_gactions();
             obj.setup_event_controllers();
+            obj.setup_list();
         }
     }
 
@@ -114,6 +117,7 @@ glib::wrapper! {
         @implements gio::ActionGroup, gio::ActionMap;
 }
 
+#[gtk::template_callbacks]
 impl PrismaTimerWindow {
     pub fn new<P: glib::IsA<gtk::Application>>(application: &P) -> Self {
         glib::Object::builder()
@@ -142,11 +146,56 @@ impl PrismaTimerWindow {
         self.add_controller(gestures);
     }
 
-    fn timer_state_changed_cb(&self, state: TimerSimpleState) {
+    fn setup_list(&self) {
+        let imp = self.imp();
+
+        let session = data::Session::new();
+        self.set_session(session.clone());
+
+        session.connect_items_changed(
+            glib::clone!(@weak self as obj => move |_, position, removed, added| {
+                obj.session_items_changed_cb(position, removed, added);
+            }),
+        );
+
+        session.connect_closure(
+            "solve-added",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_solve_added_cb();
+            }),
+        );
+
+        let sort_model = gtk::SortListModel::new(
+            Some(session),
+            Some(gtk::CustomSorter::new(|a, b| {
+                let a = a.downcast_ref::<data::SessionItem>().unwrap();
+                let b = b.downcast_ref::<data::SessionItem>().unwrap();
+                b.timestamp().cmp(&a.timestamp()).into()
+            })),
+        );
+        self.set_session_sort_model(sort_model.clone());
+
+        let selection_model = gtk::NoSelection::new(Some(sort_model));
+        self.set_session_selection_model(selection_model.clone());
+
+        let factory = gtk::SignalListItemFactory::new();
+        factory.connect_setup(glib::clone!(@weak self as view => move |_, item| {
+            let row = ui::SessionItemRow::new();
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            item.set_child(Some(&row));
+            item.bind_property("item", &row, "item").sync_create().build();
+        }));
+
+        imp.list_view.set_model(Some(&selection_model));
+        imp.list_view.set_factory(Some(&factory));
+    }
+
+    fn timer_state_changed_cb(&self, state: TimerState) {
         let imp = self.imp();
 
         match state {
-            TimerSimpleState::Ready | TimerSimpleState::Timing => {
+            TimerState::Ready | TimerState::Timing { .. } => {
                 if imp.split_view.is_collapsed() {
                     imp.split_view.set_show_sidebar(false);
                 }
@@ -156,5 +205,24 @@ impl PrismaTimerWindow {
                 self.set_focus_mode(false);
             }
         }
+    }
+
+    fn session_items_changed_cb(&self, _position: u32, _removed: u32, _added: u32) {
+        let imp = self.imp();
+        if self.session().map_or(0, |s| s.n_items()) > 0 {
+            imp.sidebar_stack.set_visible_child_name("list");
+        } else {
+            imp.sidebar_stack.set_visible_child_name("empty");
+        }
+    }
+
+    fn session_solve_added_cb(&self) {
+        let imp = self.imp();
+        imp.list_view.scroll_to(0, gtk::ListScrollFlags::NONE, None);
+    }
+
+    #[template_callback]
+    fn list_view_activated_cb(&self, position: u32, _list_view: &gtk::ListView) {
+        log::debug!("selected position: {position}");
     }
 }

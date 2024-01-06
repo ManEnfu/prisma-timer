@@ -38,14 +38,44 @@
                   </object>
                 </child>
                 <property name="content">
-                  <object class="AdwStatusPage" id="search_result_empty">
-                    <property name="icon-name">preferences-system-time-symbolic</property>
-                    <property name="title">No solves</property>
-                    <property name="description">Get started by starting the timer.</property>
-                    <property name="vexpand">true</property>
-                    <style>
-                      <class name="compact"/>
-                    </style>
+                  <object class="GtkStack" id="sidebar_stack">
+                    <property name="visible-child">search_result_empty</property>
+                    <property name="transition-type">crossfade</property>
+                    <child>
+                      <object class="GtkStackPage">
+                        <property name="name">empty</property>
+                        <property name="child">
+                          <object class="AdwStatusPage" id="search_result_empty">
+                            <property name="icon-name">preferences-system-time-symbolic</property>
+                            <property name="title">No solves</property>
+                            <property name="description">Get started by starting the timer.</property>
+                            <property name="vexpand">true</property>
+                            <style>
+                              <class name="compact"/>
+                            </style>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkStackPage">
+                        <property name="name">list</property>
+                        <property name="child">
+                          <object class="GtkScrolledWindow" id="scrolled_window">
+                            <property name="vexpand">True</property>
+                            <child>
+                              <object class="GtkListView" id="list_view">
+                                <property name="single-click-activate">True</property>
+                                <style>
+                                  <class name="navigation-sidebar"/>
+                                </style>
+                                <signal name="activate" handler="list_view_activated_cb" swapped="true"/>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
                   </object>
                 </property>
               </object>
@@ -92,6 +122,10 @@
                     <property name="timer-state-machine"
                               bind-source="PrismaTimerWindow"
                               bind-property="timer-state-machine"
+                              bind-flags="sync-create"/>
+                    <property name="session"
+                              bind-source="PrismaTimerWindow"
+                              bind-property="session"
                               bind-flags="sync-create"/>
                   </object>
                 </property>

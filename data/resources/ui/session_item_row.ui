@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <template class="PtSessionItemRow" parent="AdwBin">
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">horizontal</property>
+        <property name="margin-bottom">6</property>
+        <property name="margin-top">6</property>
+        <property name="spacing">12</property>
+        <child>
+          <object class="GtkImage" id="icon">
+            <property name="icon-name">preferences-system-time-symbolic</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkLabel" id="time_label">
+                    <property name="valign">baseline-center</property>
+                    <binding name="label">
+                      <lookup name="recorded-time">
+                        <lookup name="item">PtSessionItemRow</lookup>
+                      </lookup>
+                    </binding>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="valign">baseline-center</property>
+                    <binding name="visible">
+                      <closure type="gboolean" function="string_not_empty">
+                        <lookup name="ao5-time">
+                          <lookup name="item">PtSessionItemRow</lookup>
+                        </lookup>
+                      </closure>
+                    </binding>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Ao5: </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="ao5_label">
+                        <binding name="label">
+                          <lookup name="ao5-time">
+                            <lookup name="item">PtSessionItemRow</lookup>
+                          </lookup>
+                        </binding>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="caption"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="valign">baseline-center</property>
+                    <binding name="visible">
+                      <closure type="gboolean" function="string_not_empty">
+                        <lookup name="ao12-time">
+                          <lookup name="item">PtSessionItemRow</lookup>
+                        </lookup>
+                      </closure>
+                    </binding>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Ao12: </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="ao12_label">
+                        <binding name="label">
+                          <lookup name="ao12-time">
+                            <lookup name="item">PtSessionItemRow</lookup>
+                          </lookup>
+                        </binding>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="caption"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="scramble_label">
+                <property name="label">Scramble</property>
+                <property name="halign">start</property>
+                <style>
+                  <class name="caption"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

@@ -1,10 +1,12 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use gtk::glib;
 
+use super::SolveTime;
+
 /// The representation of the state of a timer.
 #[derive(Debug, Default)]
-pub enum TimerState {
+pub enum TimerStatePriv {
     #[default]
     Idle,
     Wait {
@@ -14,29 +16,41 @@ pub enum TimerState {
     Timing {
         last_tick: Instant,
         tick_cb_id: glib::SourceId,
+        duration: Duration,
+        plus_2: bool,
     },
-    Finished,
+    Finished {
+        solve_time: SolveTime,
+    },
 }
 
-impl TimerState {
-    pub fn get_simple(&self) -> TimerSimpleState {
+impl TimerStatePriv {
+    pub fn get_simple(&self) -> TimerState {
         match self {
-            Self::Idle => TimerSimpleState::Idle,
-            Self::Wait { timeout_id: _ } => TimerSimpleState::Wait,
-            Self::Ready => TimerSimpleState::Ready,
-            Self::Timing { .. } => TimerSimpleState::Timing,
-            Self::Finished => TimerSimpleState::Finished,
+            Self::Idle => TimerState::Idle,
+            Self::Wait { .. } => TimerState::Wait,
+            Self::Ready => TimerState::Ready,
+            Self::Timing { duration, .. } => TimerState::Timing {
+                duration: *duration,
+            },
+            Self::Finished { solve_time } => TimerState::Finished {
+                solve_time: *solve_time,
+            },
         }
     }
 }
 
 /// The transferrable representation of the state of a timer.
 #[derive(Debug, Default, Clone, Copy)]
-pub enum TimerSimpleState {
+pub enum TimerState {
     #[default]
     Idle,
     Wait,
     Ready,
-    Timing,
-    Finished,
+    Timing {
+        duration: Duration,
+    },
+    Finished {
+        solve_time: SolveTime,
+    },
 }

@@ -3,9 +3,8 @@ use std::sync::RwLockReadGuard;
 use std::time::Duration;
 use std::time::Instant;
 
-use crate::data;
+use crate::data::{Penalty, SolveTime, TimerState, TimerStatePriv};
 use adw::subclass::prelude::*;
-use data::{TimerSimpleState, TimerState};
 use gtk::glib;
 use gtk::prelude::*;
 
@@ -22,8 +21,8 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct TimerStateMachine {
-        pub state: RwLock<TimerState>,
-        pub duration: RwLock<Duration>,
+        pub state: RwLock<TimerStatePriv>,
+        pub last_solve: RwLock<SolveTime>,
     }
 
     #[glib::object_subclass]
@@ -58,52 +57,55 @@ impl TimerStateMachine {
         glib::Object::builder().build()
     }
 
-    pub fn state(&self) -> RwLockReadGuard<'_, TimerState> {
+    pub fn state(&self) -> RwLockReadGuard<'_, TimerStatePriv> {
         let imp = self.imp();
         imp.state.read().unwrap()
     }
 
-    pub fn simple_state(&self) -> TimerSimpleState {
+    pub fn simple_state(&self) -> TimerState {
         let imp = self.imp();
         imp.state.read().unwrap().get_simple()
     }
 
-    pub fn duration(&self) -> Duration {
+    pub fn last_solve(&self) -> SolveTime {
         let imp = self.imp();
-        imp.duration.read().unwrap().to_owned()
+        *imp.last_solve.read().unwrap()
     }
 
     /// Called when timer trigger is pressed.
     pub fn press(&self) {
         let imp = self.imp();
         let mut state_changed = true;
-        let mut tick = false;
 
         {
             let mut state = imp.state.write().unwrap();
-            let mut duration = imp.duration.write().unwrap();
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
-                TimerState::Idle => {
+                TimerStatePriv::Idle => {
                     let timeout = glib::timeout_add_once(
                         Duration::from_millis(WAIT_TIMEOUT),
                         glib::clone!(@weak self as obj => move || {
                             obj.press_timeout();
                         }),
                     );
-                    TimerState::Wait {
+                    TimerStatePriv::Wait {
                         timeout_id: timeout,
                     }
                 }
-                TimerState::Timing {
+                TimerStatePriv::Timing {
                     last_tick,
                     tick_cb_id,
+                    duration,
+                    plus_2,
                 } => {
                     tick_cb_id.remove();
-                    *duration += Instant::now() - last_tick;
-                    tick = true;
-                    TimerState::Finished
+                    let solve_time = SolveTime::new(
+                        duration + (Instant::now() - last_tick),
+                        if plus_2 { Some(Penalty::Plus2) } else { None },
+                    );
+                    *imp.last_solve.write().unwrap() = solve_time;
+                    TimerStatePriv::Finished { solve_time }
                 }
                 s => {
                     state_changed = false;
@@ -120,9 +122,6 @@ impl TimerStateMachine {
         if state_changed {
             self.emit_by_name::<()>("state-changed", &[])
         }
-        if tick {
-            self.emit_by_name::<()>("tick", &[])
-        }
     }
 
     /// Called when timer trigger is released.
@@ -132,15 +131,14 @@ impl TimerStateMachine {
 
         {
             let mut state = imp.state.write().unwrap();
-            let mut duration = imp.duration.write().unwrap();
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
-                TimerState::Wait { timeout_id } => {
+                TimerStatePriv::Wait { timeout_id } => {
                     timeout_id.remove();
-                    TimerState::Idle
+                    TimerStatePriv::Idle
                 }
-                TimerState::Ready => {
+                TimerStatePriv::Ready => {
                     let tick_cb = glib::timeout_add(
                         Duration::from_millis(TICK_INTERVAL),
                         glib::clone!(@strong self as obj => move || {
@@ -148,13 +146,14 @@ impl TimerStateMachine {
                             return glib::ControlFlow::Continue;
                         }),
                     );
-                    *duration = Duration::ZERO;
-                    TimerState::Timing {
+                    TimerStatePriv::Timing {
                         last_tick: Instant::now(),
                         tick_cb_id: tick_cb,
+                        duration: Duration::ZERO,
+                        plus_2: false,
                     }
                 }
-                TimerState::Finished => TimerState::Idle,
+                TimerStatePriv::Finished { .. } => TimerStatePriv::Idle,
                 s => {
                     state_changed = false;
                     s
@@ -176,19 +175,15 @@ impl TimerStateMachine {
     pub fn press_timeout(&self) {
         let imp = self.imp();
         let mut state_changed = true;
-        let mut tick = false;
 
         {
             let mut state = imp.state.write().unwrap();
-            let mut duration = imp.duration.write().unwrap();
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
-                TimerState::Wait { timeout_id } => {
+                TimerStatePriv::Wait { timeout_id } => {
                     timeout_id.remove();
-                    *duration = Duration::ZERO;
-                    tick = true;
-                    TimerState::Ready
+                    TimerStatePriv::Ready
                 }
                 s => {
                     state_changed = false;
@@ -205,9 +200,6 @@ impl TimerStateMachine {
         if state_changed {
             self.emit_by_name::<()>("state-changed", &[])
         }
-        if tick {
-            self.emit_by_name::<()>("tick", &[])
-        }
     }
 
     /// Called on every tick during `Timing` state.
@@ -216,9 +208,13 @@ impl TimerStateMachine {
 
         {
             let mut state = imp.state.write().unwrap();
-            let mut duration = imp.duration.write().unwrap();
 
-            if let TimerState::Timing { last_tick, .. } = &mut *state {
+            if let TimerStatePriv::Timing {
+                last_tick,
+                duration,
+                ..
+            } = &mut *state
+            {
                 let new_tick = Instant::now();
                 *duration += new_tick - *last_tick;
                 *last_tick = new_tick;

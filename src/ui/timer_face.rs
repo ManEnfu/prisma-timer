@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::data::{self, TimerSimpleState};
+use crate::data::{self, TimerState};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, glib};
@@ -31,6 +31,9 @@ mod imp {
         #[property(get, set = Self::set_timer_state_machine)]
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+
+        #[property(get, set)]
+        pub session: RefCell<Option<data::Session>>,
     }
 
     impl TimerFace {
@@ -56,7 +59,7 @@ mod imp {
                     "tick",
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
-                        obj.set_time_label(sm.duration());
+                        obj.tick_cb(sm);
                     }),
                 ));
             }
@@ -163,14 +166,12 @@ impl TimerFace {
     }
 
     fn pressed_cb(&self) {
-        log::debug!("PtTimerFace pressed");
         if let Some(sm) = self.timer_state_machine() {
             sm.press();
         }
     }
 
     fn released_cb(&self) {
-        log::debug!("PtTimerFace released");
         if let Some(sm) = self.timer_state_machine() {
             sm.release();
         }
@@ -178,23 +179,35 @@ impl TimerFace {
 
     fn setup_callbacks(&self) {}
 
-    pub(self) fn timer_state_changed_cb(&self, state: TimerSimpleState) {
+    pub(self) fn timer_state_changed_cb(&self, state: TimerState) {
         match state {
-            TimerSimpleState::Idle => {
+            TimerState::Idle => {
                 self.set_color_normal();
             }
-            TimerSimpleState::Wait => {
+            TimerState::Wait => {
                 self.set_color_wait();
             }
-            TimerSimpleState::Ready => {
+            TimerState::Ready => {
                 self.set_color_ready();
+                self.set_time_label(Duration::ZERO);
             }
-            TimerSimpleState::Timing => {
+            TimerState::Timing { duration } => {
                 self.set_color_normal();
+                self.set_time_label(duration);
             }
-            TimerSimpleState::Finished => {
+            TimerState::Finished { solve_time, .. } => {
                 self.set_color_wait();
+                self.set_time_label(solve_time.measured_time());
+                if let Some(session) = self.session() {
+                    session.add_solve(data::SolveData::new(solve_time, "".to_string()));
+                }
             }
+        }
+    }
+
+    pub(self) fn tick_cb(&self, sm: &data::TimerStateMachine) {
+        if let data::TimerState::Timing { duration } = sm.simple_state() {
+            self.set_time_label(duration);
         }
     }
 

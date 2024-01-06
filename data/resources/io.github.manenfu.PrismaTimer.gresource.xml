@@ -2,7 +2,10 @@
 <gresources>
   <gresource prefix="/io/github/manenfu/PrismaTimer">
     <file>style.css</file>
+
+    <file preprocess="xml-stripblanks">ui/session_item_row.ui</file>
     <file preprocess="xml-stripblanks">ui/timer_face.ui</file>
+
     <file preprocess="xml-stripblanks">ui/shortcuts_window.ui</file>
     <file preprocess="xml-stripblanks">ui/window.ui</file>
   </gresource>
