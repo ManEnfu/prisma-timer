@@ -1,11 +1,11 @@
 .timer-face .time-label {
-  font-size: 90px;
+  font-size: 72pt;
   font-feature-settings: "tnum" 1;
   font-weight: 400;
 }
 
 .timer-face .time-label.small {
-  font-size: 54px;
+  font-size: 48pt;
   font-feature-settings: "tnum" 1;
   font-weight: 400;
 }
@@ -20,4 +20,12 @@
 
 .timer-face .statistics-label {
   font-size: 1em;
+}
+
+.timer-face.timer-face-large .time-label {
+  font-size: 96pt;
+}
+
+.timer-face.timer-face-large .time-label.small {
+  font-size: 64pt;
 }

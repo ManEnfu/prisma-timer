@@ -84,6 +84,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
+            klass.bind_template_instance_callbacks();
             TemplateCallbacks::bind_template_callbacks(klass);
         }
 
@@ -92,19 +93,8 @@ mod imp {
         }
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for TimerFace {
-        fn properties() -> &'static [glib::ParamSpec] {
-            Self::derived_properties()
-        }
-
-        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
-            self.derived_set_property(id, value, pspec)
-        }
-
-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-            self.derived_property(id, pspec)
-        }
-
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![
@@ -143,6 +133,7 @@ glib::wrapper! {
         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
 }
 
+#[gtk::template_callbacks]
 impl TimerFace {
     fn setup_event_controllers(&self) {
         let key_events = gtk::EventControllerKey::new();
@@ -261,5 +252,15 @@ impl TimerFace {
             imp.seconds.set_label(&format!("{:0>1}", s));
         }
         imp.centis.set_label(&format!("{:0>2}", c));
+    }
+
+    #[template_callback]
+    fn breakpoint_apply_cb(&self, _bp: &adw::Breakpoint) {
+        self.add_css_class("timer-face-large");
+    }
+
+    #[template_callback]
+    fn breakpoint_unapply_cb(&self, _bp: &adw::Breakpoint) {
+        self.remove_css_class("timer-face-large");
     }
 }

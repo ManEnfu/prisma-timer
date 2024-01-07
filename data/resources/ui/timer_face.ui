@@ -6,129 +6,146 @@
     <property name="focusable">True</property>
     <property name="focus-on-click">True</property>
     <child>
-      <object class="GtkBox">
-        <property name="orientation">vertical</property>
-        <property name="valign">center</property>
-        <property name="spacing">12</property>
+      <object class="AdwBreakpointBin">
+        <property name="width-request">280</property>
+        <property name="height-request">200</property>
         <child>
+          <object class="AdwBreakpoint">
+            <condition> min-width: 800sp</condition>
+            <signal name="apply"
+                    handler="breakpoint_apply_cb"
+                    swapped="true"/>
+            <signal name="unapply"
+                    handler="breakpoint_unapply_cb"
+                    swapped="true"/>
+          </object>
+        </child>
+        <property name="child">
           <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="halign">center</property>
-            <child>
-              <object class="GtkLabel" id="minutes">
-                <property name="valign">baseline-center</property>
-                <property name="label">0</property>
-                <style>
-                  <class name="time-label"/>
-                </style>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="colon">
-                <property name="valign">baseline-center</property>
-                <property name="label">∶</property>
-                <style>
-                  <class name="time-label"/>
-                  <class name="colon"/>
-                </style>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="seconds">
-                <property name="valign">baseline-center</property>
-                <property name="label">00</property>
-                <style>
-                  <class name="time-label"/>
-                </style>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="point">
-                <property name="valign">baseline-center</property>
-                <property name="label">.</property>
-                <style>
-                  <class name="time-label"/>
-                  <class name="small"/>
-                  <class name="colon"/>
-                </style>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="centis">
-                <property name="valign">baseline-center</property>
-                <property name="label">00</property>
-                <style>
-                  <class name="time-label"/>
-                  <class name="small"/>
-                </style>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox" id="statistics_box">
             <property name="orientation">vertical</property>
-            <property name="halign">center</property>
-            <property name="spacing">6</property>
+            <property name="valign">center</property>
+            <property name="spacing">12</property>
             <child>
               <object class="GtkBox">
                 <property name="orientation">horizontal</property>
                 <property name="halign">center</property>
-                <binding name="visible">
-                  <closure type="gboolean" function="string_not_empty">
-                    <lookup name="last-ao5-string">
-                      <lookup name="session">PtTimerFace</lookup>
-                    </lookup>
-                  </closure>
-                </binding>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="label">Ao5: </property>
+                  <object class="GtkLabel" id="minutes">
+                    <property name="valign">baseline-center</property>
+                    <property name="label">0</property>
+                    <style>
+                      <class name="time-label"/>
+                    </style>
                   </object>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="last_ao5_label">
-                    <binding name="label">
-                      <lookup name="last-ao5-string">
-                        <lookup name="session">PtTimerFace</lookup>
-                      </lookup>
-                    </binding>
+                  <object class="GtkLabel" id="colon">
+                    <property name="valign">baseline-center</property>
+                    <property name="label">∶</property>
+                    <style>
+                      <class name="time-label"/>
+                      <class name="colon"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="seconds">
+                    <property name="valign">baseline-center</property>
+                    <property name="label">00</property>
+                    <style>
+                      <class name="time-label"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="point">
+                    <property name="valign">baseline-center</property>
+                    <property name="label">.</property>
+                    <style>
+                      <class name="time-label"/>
+                      <class name="small"/>
+                      <class name="colon"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="centis">
+                    <property name="valign">baseline-center</property>
+                    <property name="label">00</property>
+                    <style>
+                      <class name="time-label"/>
+                      <class name="small"/>
+                    </style>
                   </object>
                 </child>
               </object>
             </child>
             <child>
-              <object class="GtkBox">
-                <property name="orientation">horizontal</property>
+              <object class="GtkBox" id="statistics_box">
+                <property name="orientation">vertical</property>
                 <property name="halign">center</property>
-                <binding name="visible">
-                  <closure type="gboolean" function="string_not_empty">
-                    <lookup name="last-ao12-string">
-                      <lookup name="session">PtTimerFace</lookup>
-                    </lookup>
-                  </closure>
-                </binding>
+                <property name="spacing">6</property>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="label">Ao12: </property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="last_ao12_label">
-                    <binding name="label">
-                      <lookup name="last-ao12-string">
-                        <lookup name="session">PtTimerFace</lookup>
-                      </lookup>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="halign">center</property>
+                    <binding name="visible">
+                      <closure type="gboolean" function="string_not_empty">
+                        <lookup name="last-ao5-string">
+                          <lookup name="session">PtTimerFace</lookup>
+                        </lookup>
+                      </closure>
                     </binding>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Ao5: </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="last_ao5_label">
+                        <binding name="label">
+                          <lookup name="last-ao5-string">
+                            <lookup name="session">PtTimerFace</lookup>
+                          </lookup>
+                        </binding>
+                      </object>
+                    </child>
                   </object>
                 </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="halign">center</property>
+                    <binding name="visible">
+                      <closure type="gboolean" function="string_not_empty">
+                        <lookup name="last-ao12-string">
+                          <lookup name="session">PtTimerFace</lookup>
+                        </lookup>
+                      </closure>
+                    </binding>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Ao12: </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="last_ao12_label">
+                        <binding name="label">
+                          <lookup name="last-ao12-string">
+                            <lookup name="session">PtTimerFace</lookup>
+                          </lookup>
+                        </binding>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <style>
+                  <class name="statistics-label"/>
+                </style>
               </object>
             </child>
-            <style>
-              <class name="statistics-label"/>
-            </style>
           </object>
-        </child>
+        </property>
       </object>
     </child>
   </template>
