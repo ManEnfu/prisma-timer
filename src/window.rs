@@ -84,6 +84,13 @@ mod imp {
             klass.bind_template();
             klass.bind_template_instance_callbacks();
             TemplateCallbacks::bind_template_callbacks(klass);
+
+            klass.install_action("sidebar.hide", None, move |obj, _, _| {
+                let imp = obj.imp();
+                if imp.split_view.is_collapsed() {
+                    imp.split_view.set_show_sidebar(false);
+                }
+            })
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {

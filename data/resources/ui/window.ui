@@ -16,7 +16,7 @@
     </child>
     <property name="content">
       <object class="AdwOverlaySplitView" id="split_view">
-        <property name="min-sidebar-width">240sp</property>
+        <property name="min-sidebar-width">300sp</property>
         <property name="max-sidebar-width">360sp</property>
         <property name="show-sidebar"
                   bind-source="toggle_pane_button"
@@ -35,6 +35,15 @@
               <object class="AdwToolbarView">
                 <child type="top">
                   <object class="AdwHeaderBar" id="sidebar_header_bar">
+                    <child type="start">
+                      <object class="GtkButton" id="sedabar_back_button">
+                        <property name="icon-name">go-previous-symbolic</property>
+                        <property name="action-name">sidebar.hide</property>
+                        <binding name="visible">
+                          <lookup name="collapsed">split_view</lookup>
+                        </binding>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <property name="content">
