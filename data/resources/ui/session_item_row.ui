@@ -26,7 +26,7 @@
                   <object class="GtkLabel" id="time_label">
                     <property name="valign">baseline-center</property>
                     <binding name="label">
-                      <lookup name="recorded-time">
+                      <lookup name="solve-time-string">
                         <lookup name="item">PtSessionItemRow</lookup>
                       </lookup>
                     </binding>
@@ -38,7 +38,7 @@
                     <property name="valign">baseline-center</property>
                     <binding name="visible">
                       <closure type="gboolean" function="string_not_empty">
-                        <lookup name="ao5-time">
+                        <lookup name="ao5-string">
                           <lookup name="item">PtSessionItemRow</lookup>
                         </lookup>
                       </closure>
@@ -51,7 +51,7 @@
                     <child>
                       <object class="GtkLabel" id="ao5_label">
                         <binding name="label">
-                          <lookup name="ao5-time">
+                          <lookup name="ao5-string">
                             <lookup name="item">PtSessionItemRow</lookup>
                           </lookup>
                         </binding>
@@ -68,7 +68,7 @@
                     <property name="valign">baseline-center</property>
                     <binding name="visible">
                       <closure type="gboolean" function="string_not_empty">
-                        <lookup name="ao12-time">
+                        <lookup name="ao12-string">
                           <lookup name="item">PtSessionItemRow</lookup>
                         </lookup>
                       </closure>
@@ -81,7 +81,7 @@
                     <child>
                       <object class="GtkLabel" id="ao12_label">
                         <binding name="label">
-                          <lookup name="ao12-time">
+                          <lookup name="ao12-string">
                             <lookup name="item">PtSessionItemRow</lookup>
                           </lookup>
                         </binding>

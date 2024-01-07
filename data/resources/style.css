@@ -17,3 +17,7 @@
 .timer-face.ready .time-label {
   color: @success_color;
 }
+
+.timer-face .statistics-label {
+  font-size: 1em;
+}

@@ -3,6 +3,7 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
 
+#[allow(clippy::enum_variant_names)]
 mod imp {
     use std::cell::RefCell;
 
@@ -11,9 +12,88 @@ mod imp {
 
     use super::*;
 
-    #[derive(Debug, Default)]
+    #[derive(Debug, Default, glib::Properties)]
+    #[properties(wrapper_type = super::Session)]
     pub struct Session {
+        #[property(name = "last-solve-string", type = String, get = Self::get_last_solve_string)]
+        #[property(name = "last-mo3-string", type = String, get = Self::get_last_mo3_string)]
+        #[property(name = "last-ao5-string", type = String, get = Self::get_last_ao5_string)]
+        #[property(name = "last-ao12-string", type = String, get = Self::get_last_ao12_string)]
+        #[property(name = "best-solve-string", type = String, get = Self::get_best_solve_string)]
+        #[property(name = "best-mo3-string", type = String, get = Self::get_best_mo3_string)]
+        #[property(name = "best-ao5-string", type = String, get = Self::get_best_ao5_string)]
+        #[property(name = "best-ao12-string", type = String, get = Self::get_best_ao12_string)]
         pub list: RefCell<Vec<SessionItem>>,
+    }
+
+    impl Session {
+        fn get_last_solve_string(&self) -> String {
+            self.list
+                .borrow()
+                .last()
+                .map(SessionItem::time)
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_last_mo3_string(&self) -> String {
+            self.list
+                .borrow()
+                .last()
+                .and_then(SessionItem::mo3)
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_last_ao5_string(&self) -> String {
+            self.list
+                .borrow()
+                .last()
+                .and_then(SessionItem::ao5)
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_last_ao12_string(&self) -> String {
+            self.list
+                .borrow()
+                .last()
+                .and_then(SessionItem::ao12)
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_best_solve_string(&self) -> String {
+            self.list
+                .borrow()
+                .iter()
+                .map(SessionItem::time)
+                .min()
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_best_mo3_string(&self) -> String {
+            self.list
+                .borrow()
+                .iter()
+                .min_by_key(|item| item.mo3().unwrap_or(SolveTime::DNF))
+                .and_then(SessionItem::mo3)
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_best_ao5_string(&self) -> String {
+            self.list
+                .borrow()
+                .iter()
+                .min_by_key(|item| item.ao5().unwrap_or(SolveTime::DNF))
+                .and_then(SessionItem::ao5)
+                .map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_best_ao12_string(&self) -> String {
+            self.list
+                .borrow()
+                .iter()
+                .min_by_key(|item| item.ao12().unwrap_or(SolveTime::DNF))
+                .and_then(SessionItem::ao12)
+                .map_or(String::default(), |t| t.to_string())
+        }
     }
 
     #[glib::object_subclass]
@@ -23,6 +103,7 @@ mod imp {
         type Interfaces = (gio::ListModel,);
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for Session {
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
@@ -182,6 +263,14 @@ impl Session {
         }
         let n_changed = 12.min(len - index);
         self.items_changed(index as u32, n_changed as u32, n_changed as u32);
+        self.notify_last_solve_string();
+        self.notify_last_mo3_string();
+        self.notify_last_ao5_string();
+        self.notify_last_ao12_string();
+        self.notify_best_solve_string();
+        self.notify_best_mo3_string();
+        self.notify_best_ao5_string();
+        self.notify_last_ao12_string();
     }
 }
 

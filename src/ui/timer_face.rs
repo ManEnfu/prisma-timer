@@ -8,6 +8,8 @@ use gtk::{gdk, glib};
 mod imp {
     use std::cell::RefCell;
 
+    use crate::util::TemplateCallbacks;
+
     use super::*;
 
     use gtk::glib::subclass::{Signal, SignalType};
@@ -27,6 +29,13 @@ mod imp {
         pub point: TemplateChild<gtk::Label>,
         #[template_child]
         pub centis: TemplateChild<gtk::Label>,
+
+        #[template_child]
+        pub statistics_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub last_ao5_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub last_ao12_label: TemplateChild<gtk::Label>,
 
         #[property(get, set = Self::set_timer_state_machine)]
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
@@ -75,6 +84,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
+            TemplateCallbacks::bind_template_callbacks(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -180,24 +190,31 @@ impl TimerFace {
     fn setup_callbacks(&self) {}
 
     pub(self) fn timer_state_changed_cb(&self, state: TimerState) {
+        let imp = self.imp();
+
         match state {
             TimerState::Idle => {
                 self.set_color_normal();
+                imp.statistics_box.set_visible(true);
             }
             TimerState::Wait => {
                 self.set_color_wait();
+                imp.statistics_box.set_visible(true);
             }
             TimerState::Ready => {
                 self.set_color_ready();
                 self.set_time_label(Duration::ZERO);
+                imp.statistics_box.set_visible(false);
             }
             TimerState::Timing { duration } => {
                 self.set_color_normal();
                 self.set_time_label(duration);
+                imp.statistics_box.set_visible(false);
             }
             TimerState::Finished { solve_time, .. } => {
                 self.set_color_wait();
                 self.set_time_label(solve_time.measured_time());
+                imp.statistics_box.set_visible(true);
                 if let Some(session) = self.session() {
                     session.add_solve(data::SolveData::new(solve_time, "".to_string()));
                 }

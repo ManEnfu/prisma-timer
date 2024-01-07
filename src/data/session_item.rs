@@ -15,13 +15,13 @@ mod imp {
     #[derive(Debug, Default, glib::Properties)]
     #[properties(wrapper_type = super::SessionItem)]
     pub struct SessionItem {
-        #[property(name = "recorded-time", type = String, get = Self::get_recorded_time_string)]
+        #[property(name = "solve-time-string", type = String, get = Self::get_recorded_time_string)]
         pub solve: RefCell<Option<SolveData>>,
-        #[property(name = "mo3-time", type = String, get = Self::get_mo3_string)]
+        #[property(name = "mo3-string", type = String, get = Self::get_mo3_string)]
         pub mo3: Cell<Option<SolveTime>>,
-        #[property(name = "ao5-time", type = String, get = Self::get_ao5_string)]
+        #[property(name = "ao5-string", type = String, get = Self::get_ao5_string)]
         pub ao5: Cell<Option<SolveTime>>,
-        #[property(name = "ao12-time", type = String, get = Self::get_ao12_string)]
+        #[property(name = "ao12-string", type = String, get = Self::get_ao12_string)]
         pub ao12: Cell<Option<SolveTime>>,
     }
 
@@ -82,22 +82,22 @@ impl SessionItem {
 
     pub fn set_mo3(&self, v: Option<SolveTime>) {
         self.imp().mo3.set(v);
-        self.notify_mo3_time();
+        self.notify_mo3_string();
     }
 
     pub fn set_ao5(&self, v: Option<SolveTime>) {
         self.imp().ao5.set(v);
-        self.notify_ao5_time();
+        self.notify_ao5_string();
     }
 
     pub fn set_ao12(&self, v: Option<SolveTime>) {
         self.imp().ao12.set(v);
-        self.notify_ao12_time();
+        self.notify_ao12_string();
     }
 
     pub fn set_penalty(&self, penalty: Option<Penalty>) {
         self.imp().solve.borrow_mut().as_mut().unwrap().time.penalty = penalty;
-        self.notify_recorded_time();
+        self.notify_solve_time_string();
     }
 
     pub fn timestamp(&self) -> SystemTime {

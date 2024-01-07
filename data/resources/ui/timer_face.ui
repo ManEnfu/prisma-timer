@@ -9,6 +9,7 @@
       <object class="GtkBox">
         <property name="orientation">vertical</property>
         <property name="valign">center</property>
+        <property name="spacing">12</property>
         <child>
           <object class="GtkBox">
             <property name="orientation">horizontal</property>
@@ -62,6 +63,70 @@
                 </style>
               </object>
             </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="statistics_box">
+            <property name="orientation">vertical</property>
+            <property name="halign">center</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
+                <property name="halign">center</property>
+                <binding name="visible">
+                  <closure type="gboolean" function="string_not_empty">
+                    <lookup name="last-ao5-string">
+                      <lookup name="session">PtTimerFace</lookup>
+                    </lookup>
+                  </closure>
+                </binding>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Ao5: </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="last_ao5_label">
+                    <binding name="label">
+                      <lookup name="last-ao5-string">
+                        <lookup name="session">PtTimerFace</lookup>
+                      </lookup>
+                    </binding>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
+                <property name="halign">center</property>
+                <binding name="visible">
+                  <closure type="gboolean" function="string_not_empty">
+                    <lookup name="last-ao12-string">
+                      <lookup name="session">PtTimerFace</lookup>
+                    </lookup>
+                  </closure>
+                </binding>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Ao12: </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="last_ao12_label">
+                    <binding name="label">
+                      <lookup name="last-ao12-string">
+                        <lookup name="session">PtTimerFace</lookup>
+                      </lookup>
+                    </binding>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <style>
+              <class name="statistics-label"/>
+            </style>
           </object>
         </child>
       </object>
