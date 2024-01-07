@@ -4,9 +4,9 @@ use gtk::glib;
 
 use super::SolveTime;
 
-/// The representation of the state of a timer.
+/// The internal representation of the state of a timer.
 #[derive(Debug, Default)]
-pub enum TimerStatePriv {
+pub(crate) enum TimerStatePriv {
     #[default]
     Idle,
     Wait {
@@ -25,7 +25,7 @@ pub enum TimerStatePriv {
 }
 
 impl TimerStatePriv {
-    pub fn get_simple(&self) -> TimerState {
+    pub fn to_state(&self) -> TimerState {
         match self {
             Self::Idle => TimerState::Idle,
             Self::Wait { .. } => TimerState::Wait,
@@ -43,14 +43,16 @@ impl TimerStatePriv {
 /// The transferrable representation of the state of a timer.
 #[derive(Debug, Default, Clone, Copy)]
 pub enum TimerState {
+    /// The timer is idle.
     #[default]
     Idle,
+    /// The timer is being pressed and is waiting for a period of time before
+    /// switching to `Ready`
     Wait,
+    /// The timer is ready to start.
     Ready,
-    Timing {
-        duration: Duration,
-    },
-    Finished {
-        solve_time: SolveTime,
-    },
+    /// The timer is currently running.
+    Timing { duration: Duration },
+    /// The timer has finished timing.
+    Finished { solve_time: SolveTime },
 }

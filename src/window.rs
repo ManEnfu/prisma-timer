@@ -4,6 +4,7 @@ use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, gio, glib};
 
+#[doc(hidden)]
 mod imp {
     use std::cell::{Cell, RefCell};
 
@@ -66,7 +67,7 @@ mod imp {
                     "state-changed",
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
-                        obj.timer_state_changed_cb(sm.simple_state());
+                        obj.timer_state_changed_cb(sm.state());
                     }),
                 ));
             }

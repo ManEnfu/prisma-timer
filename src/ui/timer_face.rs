@@ -5,6 +5,7 @@ use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, glib};
 
+#[doc(hidden)]
 mod imp {
     use std::cell::RefCell;
 
@@ -61,7 +62,7 @@ mod imp {
                     "state-changed",
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
-                        obj.timer_state_changed_cb(sm.simple_state());
+                        obj.timer_state_changed_cb(sm.state());
                     }),
                 ));
                 handlers.push(sm.connect_closure(
@@ -214,7 +215,7 @@ impl TimerFace {
     }
 
     pub(self) fn tick_cb(&self, sm: &data::TimerStateMachine) {
-        if let data::TimerState::Timing { duration } = sm.simple_state() {
+        if let data::TimerState::Timing { duration } = sm.state() {
             self.set_time_label(duration);
         }
     }

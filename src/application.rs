@@ -25,6 +25,7 @@ use gtk::{gio, glib};
 use crate::config::{APP_ID, VERSION};
 use crate::PrismaTimerWindow;
 
+#[doc(hidden)]
 mod imp {
     use super::*;
 
@@ -108,7 +109,7 @@ impl PrismaTimerApplication {
             .application_icon("io.github.manenfu.PrismaTimer")
             .developer_name("ManEnfu")
             .version(VERSION)
-            .developers(vec!["MenEnfu"])
+            .developers(vec!["ManEnfu"])
             .copyright("© 2023 ManEnfu")
             .build();
 

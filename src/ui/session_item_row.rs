@@ -5,6 +5,7 @@ use gtk::prelude::*;
 use crate::data;
 use crate::util::TemplateCallbacks;
 
+#[doc(hidden)]
 mod imp {
     use std::cell::RefCell;
 

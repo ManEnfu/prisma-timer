@@ -4,6 +4,7 @@ use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
 
 #[allow(clippy::enum_variant_names)]
+#[doc(hidden)]
 mod imp {
     use std::cell::RefCell;
 
@@ -141,18 +142,22 @@ glib::wrapper! {
 }
 
 impl Session {
+    /// Creates a new session.
     pub fn new() -> Self {
         glib::Object::builder().build()
     }
 
+    /// Gets the last solve of this session.
     pub fn last_solve(&self) -> Option<SessionItem> {
         self.imp().list.borrow().last().cloned()
     }
 
+    /// Gets the nth solve of this session.
     pub fn get(&self, index: usize) -> Option<SessionItem> {
         self.imp().list.borrow().get(index).cloned()
     }
 
+    /// Adds a solve to this session.
     pub fn add_solve(&self, solve: SolveData) {
         let item = SessionItem::new(solve);
         self.imp().list.borrow_mut().push(item);
@@ -162,6 +167,7 @@ impl Session {
         self.emit_by_name::<()>("solve-added", &[]);
     }
 
+    /// Gets the best solve item of this session.
     pub fn best_solve(&self) -> Option<SessionItem> {
         self.imp()
             .list
@@ -171,6 +177,7 @@ impl Session {
             .cloned()
     }
 
+    /// Gets the best mean of 3 time of this session.
     pub fn best_mo3(&self) -> Option<SolveTime> {
         self.imp()
             .list
@@ -180,6 +187,7 @@ impl Session {
             .and_then(SessionItem::mo3)
     }
 
+    /// Gets the best average of 5 time of this session.
     pub fn best_ao5(&self) -> Option<SolveTime> {
         self.imp()
             .list
@@ -189,6 +197,7 @@ impl Session {
             .and_then(SessionItem::ao5)
     }
 
+    /// Gets the best average of 12 time of this session.
     pub fn best_ao12(&self) -> Option<SolveTime> {
         self.imp()
             .list
@@ -249,6 +258,7 @@ impl Session {
         }
     }
 
+    /// Notify updates of an item in this index.
     pub fn solve_updated(&self, index: usize) {
         let len = self.n_items() as usize;
 
@@ -271,6 +281,15 @@ impl Session {
         self.notify_best_mo3_string();
         self.notify_best_ao5_string();
         self.notify_last_ao12_string();
+    }
+
+    /// Notify updates of an `SessionItem` object in this session.
+    pub fn solve_updated_by_object(&self, obj: &SessionItem) {
+        if let Some(index) = self.imp().list.borrow().iter().position(|item| item == obj) {
+            self.solve_updated(index);
+        } else {
+            log::warn!("PtSessionItem object is not in Session");
+        }
     }
 }
 

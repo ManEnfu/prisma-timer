@@ -6,7 +6,10 @@ use gtk::subclass::prelude::*;
 
 use crate::data::{Penalty, SolveData, SolveTime, SolvesSeq};
 
+const EXPECT_INITIALIZED: &str = "`SolveData` haven't yet initialized in `SessionItem`";
+
 #[allow(clippy::enum_variant_names)]
+#[doc(hidden)]
 mod imp {
     use std::cell::{Cell, RefCell};
 
@@ -27,7 +30,12 @@ mod imp {
 
     impl SessionItem {
         fn get_recorded_time_string(&self) -> String {
-            self.solve.borrow().as_ref().unwrap().time.to_string()
+            self.solve
+                .borrow()
+                .as_ref()
+                .expect(EXPECT_INITIALIZED)
+                .time
+                .to_string()
         }
 
         fn get_mo3_string(&self) -> String {
@@ -54,54 +62,92 @@ mod imp {
 }
 
 glib::wrapper! {
+    /// An item in a `Session`.
     pub struct SessionItem(ObjectSubclass<imp::SessionItem>);
 }
 
 impl SessionItem {
+    /// Creates a new `SessionItem` from a `SolveData`
     pub fn new(data: SolveData) -> Self {
         let obj = glib::Object::builder::<Self>().build();
         obj.imp().solve.replace(Some(data));
         obj
     }
 
+    /// Gets the solve time of this item.
     pub fn time(&self) -> SolveTime {
-        self.imp().solve.borrow().as_ref().unwrap().time
+        self.imp()
+            .solve
+            .borrow()
+            .as_ref()
+            .expect(EXPECT_INITIALIZED)
+            .time
     }
 
+    /// Gets the mean of 3 of this item.
     pub fn mo3(&self) -> Option<SolveTime> {
         self.imp().mo3.get()
     }
 
+    /// Gets the average of 5 of this item.
     pub fn ao5(&self) -> Option<SolveTime> {
         self.imp().ao5.get()
     }
 
+    /// Gets the average of 12 of this item.
     pub fn ao12(&self) -> Option<SolveTime> {
         self.imp().ao12.get()
     }
 
-    pub fn set_mo3(&self, v: Option<SolveTime>) {
+    /// Sets the mean of 3 of this item.
+    pub(crate) fn set_mo3(&self, v: Option<SolveTime>) {
         self.imp().mo3.set(v);
         self.notify_mo3_string();
     }
 
-    pub fn set_ao5(&self, v: Option<SolveTime>) {
+    /// Sets the average of 5 of this item.
+    pub(crate) fn set_ao5(&self, v: Option<SolveTime>) {
         self.imp().ao5.set(v);
         self.notify_ao5_string();
     }
 
-    pub fn set_ao12(&self, v: Option<SolveTime>) {
+    /// Sets the average of 12 of this item.
+    pub(crate) fn set_ao12(&self, v: Option<SolveTime>) {
         self.imp().ao12.set(v);
         self.notify_ao12_string();
     }
 
-    pub fn set_penalty(&self, penalty: Option<Penalty>) {
-        self.imp().solve.borrow_mut().as_mut().unwrap().time.penalty = penalty;
+    /// Gets the penalty of this item.
+    pub(crate) fn get_penalty(&self) -> Option<Penalty> {
+        self.imp()
+            .solve
+            .borrow()
+            .as_ref()
+            .expect(EXPECT_INITIALIZED)
+            .time
+            .penalty
+    }
+
+    /// Sets the penalty of this item.
+    pub(crate) fn set_penalty(&self, penalty: Option<Penalty>) {
+        self.imp()
+            .solve
+            .borrow_mut()
+            .as_mut()
+            .expect(EXPECT_INITIALIZED)
+            .time
+            .penalty = penalty;
         self.notify_solve_time_string();
     }
 
-    pub fn timestamp(&self) -> SystemTime {
-        self.imp().solve.borrow().as_ref().unwrap().timestamp
+    /// Gets the timestamp of this item.
+    pub(crate) fn timestamp(&self) -> SystemTime {
+        self.imp()
+            .solve
+            .borrow()
+            .as_ref()
+            .expect(EXPECT_INITIALIZED)
+            .timestamp
     }
 }
 

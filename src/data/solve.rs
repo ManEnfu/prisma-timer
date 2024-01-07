@@ -30,7 +30,7 @@ impl SolveTime {
         penalty: Some(Penalty::Dnf),
     };
 
-    /// Create a new `SolveTime`.
+    /// Creates a new `SolveTime`.
     pub fn new(time: Duration, penalty: Option<Penalty>) -> Self {
         let millis = time.as_millis() as u64;
         Self {
@@ -39,12 +39,13 @@ impl SolveTime {
         }
     }
 
-    /// Get the measured time.
+    /// Gets the measured time.
     pub fn measured_time(&self) -> Duration {
         self.time
     }
 
-    /// Get the recorded time (with penalty).
+    /// Gets the recorded time (with penalty).
+    /// Returns `None` if the solve is DNF.
     pub fn recorded_time(&self) -> Option<Duration> {
         match self.penalty {
             None => Some(self.time),
@@ -53,12 +54,12 @@ impl SolveTime {
         }
     }
 
-    /// Return `true` if the solve is DNF.
+    /// Returns `true` if the solve is DNF.
     pub fn is_dnf(&self) -> bool {
         self.penalty == Some(Penalty::Dnf)
     }
 
-    /// Return `true` if the solve is +2.
+    /// Returns `true` if the solve is +2.
     pub fn is_plus2(&self) -> bool {
         self.penalty == Some(Penalty::Plus2)
     }
@@ -80,7 +81,6 @@ impl PartialOrd for SolveTime {
 
 impl Ord for SolveTime {
     fn cmp(&self, other: &Self) -> Ordering {
-        // self.get_time_with_penalty().cmp(&other.get_time_with_penalty())
         match (self.recorded_time(), other.recorded_time()) {
             (Some(a), Some(b)) => a.cmp(&b),
             (Some(_), None) => Ordering::Less,
@@ -150,15 +150,22 @@ impl Sum<SolveTime> for SolveTime {
 
 /// A trait for a sequence of solves.
 pub trait SolvesSeq {
+    /// Calculates the mean time of the solves.
     fn mean_of_n(&self) -> Option<SolveTime>;
+    /// Calculates the average time of the solves. This is similar to
+    /// `mean_of_n`, but the fastest and slowest solves are excluded
+    /// from the calculation.
     fn average_of_n(&self) -> Option<SolveTime>;
 }
 
 /// A solve.
 #[derive(Debug, Clone)]
 pub struct SolveData {
+    /// The recorded time of the solve.
     pub time: SolveTime,
+    /// The timestamp of when the solve was being recorded.
     pub timestamp: SystemTime,
+    /// The scramble used in the solve.
     pub scramble: String,
 }
 

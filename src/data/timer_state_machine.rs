@@ -1,5 +1,4 @@
 use std::mem;
-use std::sync::RwLockReadGuard;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -11,6 +10,9 @@ use gtk::prelude::*;
 const WAIT_TIMEOUT: u64 = 500;
 const TICK_INTERVAL: u64 = 10;
 
+const EXPECT_RWLOCK: &str = "Error accessing timer state.";
+
+#[doc(hidden)]
 mod imp {
     use std::sync::RwLock;
 
@@ -21,8 +23,8 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct TimerStateMachine {
-        pub state: RwLock<TimerStatePriv>,
-        pub last_solve: RwLock<SolveTime>,
+        pub(super) state: RwLock<TimerStatePriv>,
+        pub(super) last_solve: RwLock<SolveTime>,
     }
 
     #[glib::object_subclass]
@@ -49,36 +51,35 @@ mod imp {
 }
 
 glib::wrapper! {
+    /// The state machine of a timer.
     pub struct TimerStateMachine(ObjectSubclass<imp::TimerStateMachine>);
 }
 
 impl TimerStateMachine {
+    /// Creates a new state machine.
     pub fn new() -> Self {
         glib::Object::builder().build()
     }
 
-    pub fn state(&self) -> RwLockReadGuard<'_, TimerStatePriv> {
+    /// Gets the state of the machine.
+    pub fn state(&self) -> TimerState {
         let imp = self.imp();
-        imp.state.read().unwrap()
+        imp.state.read().expect(EXPECT_RWLOCK).to_state()
     }
 
-    pub fn simple_state(&self) -> TimerState {
-        let imp = self.imp();
-        imp.state.read().unwrap().get_simple()
-    }
-
+    /// Gets the last time recorded by the timer.
     pub fn last_solve(&self) -> SolveTime {
         let imp = self.imp();
-        *imp.last_solve.read().unwrap()
+        *imp.last_solve.read().expect(EXPECT_RWLOCK)
     }
 
     /// Called when timer trigger is pressed.
-    pub fn press(&self) {
+    pub(crate) fn press(&self) {
         let imp = self.imp();
         let mut state_changed = true;
 
         {
-            let mut state = imp.state.write().unwrap();
+            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
@@ -104,7 +105,7 @@ impl TimerStateMachine {
                         duration + (Instant::now() - last_tick),
                         if plus_2 { Some(Penalty::Plus2) } else { None },
                     );
-                    *imp.last_solve.write().unwrap() = solve_time;
+                    *imp.last_solve.write().expect(EXPECT_RWLOCK) = solve_time;
                     TimerStatePriv::Finished { solve_time }
                 }
                 s => {
@@ -125,12 +126,12 @@ impl TimerStateMachine {
     }
 
     /// Called when timer trigger is released.
-    pub fn release(&self) {
+    pub(crate) fn release(&self) {
         let imp = self.imp();
         let mut state_changed = true;
 
         {
-            let mut state = imp.state.write().unwrap();
+            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
@@ -172,12 +173,12 @@ impl TimerStateMachine {
     }
 
     /// Called when duration of a trigger press exceeds certain threshold.
-    pub fn press_timeout(&self) {
+    pub(crate) fn press_timeout(&self) {
         let imp = self.imp();
         let mut state_changed = true;
 
         {
-            let mut state = imp.state.write().unwrap();
+            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
             let o_state = mem::take(&mut *state);
 
             let n_state = match o_state {
@@ -203,11 +204,11 @@ impl TimerStateMachine {
     }
 
     /// Called on every tick during `Timing` state.
-    pub fn tick(&self) {
+    pub(crate) fn tick(&self) {
         let imp = self.imp();
 
         {
-            let mut state = imp.state.write().unwrap();
+            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
 
             if let TimerStatePriv::Timing {
                 last_tick,
