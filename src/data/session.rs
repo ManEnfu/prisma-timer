@@ -209,7 +209,7 @@ impl Session {
 
     fn compute_mo3(&self, index: usize) -> Option<SolveTime> {
         let list = self.imp().list.borrow();
-        if list.len() >= 3 {
+        if index + 1 >= 3 {
             list.get(index - 2..index + 1)
                 .and_then(|solves| solves.mean_of_n())
         } else {
@@ -219,7 +219,7 @@ impl Session {
 
     fn compute_ao5(&self, index: usize) -> Option<SolveTime> {
         let list = self.imp().list.borrow();
-        if list.len() >= 5 {
+        if index + 1 >= 5 {
             list.get(index - 4..index + 1)
                 .and_then(|solves| solves.average_of_n())
         } else {
@@ -229,7 +229,7 @@ impl Session {
 
     fn compute_ao12(&self, index: usize) -> Option<SolveTime> {
         let list = self.imp().list.borrow();
-        if list.len() >= 12 {
+        if index + 1 >= 12 {
             list.get(index - 11..index + 1)
                 .and_then(|solves| solves.average_of_n())
         } else {
@@ -296,5 +296,116 @@ impl Session {
 impl Default for Session {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::{Duration, SystemTime};
+
+    use crate::data::Penalty;
+
+    use super::*;
+
+    fn add_dummy_solve(session: &Session, solve_time: SolveTime) {
+        session.add_solve(SolveData {
+            time: solve_time,
+            timestamp: SystemTime::now(),
+            scramble: String::default(),
+        })
+    }
+
+    #[test]
+    fn simulate_session() {
+        let session = Session::new();
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(13_440), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(14_320), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(15_900), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(12_530), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(13_080), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(14_650), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(13_540), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(12_940), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(12_110), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(13_890), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(14_330), None),
+        );
+        add_dummy_solve(
+            &session,
+            SolveTime::new(Duration::from_millis(15_020), None),
+        );
+
+        let last_solve = session.last_solve().unwrap();
+        let last_time = last_solve.time();
+        assert!(last_time.eq_aprrox(&SolveTime::new(Duration::from_millis(15_020), None), 10));
+        let last_mo3 = last_solve.mo3().unwrap();
+        assert!(last_mo3.eq_aprrox(&SolveTime::new(Duration::from_millis(14_410), None), 10));
+        let last_ao5 = last_solve.ao5().unwrap();
+        assert!(last_ao5.eq_aprrox(&SolveTime::new(Duration::from_millis(13_720), None), 10));
+        let last_ao12 = last_solve.ao12().unwrap();
+        assert!(last_ao12.eq_aprrox(&SolveTime::new(Duration::from_millis(13_770), None), 10));
+        let best_time = session.best_solve().unwrap().time();
+        assert!(best_time.eq_aprrox(&SolveTime::new(Duration::from_millis(12_110), None), 10));
+        let best_mo3 = session.best_mo3().unwrap();
+        assert!(best_mo3.eq_aprrox(&SolveTime::new(Duration::from_millis(12_860), None), 10));
+        let best_ao5 = session.best_ao5().unwrap();
+        assert!(best_ao5.eq_aprrox(&SolveTime::new(Duration::from_millis(13_190), None), 10));
+        let best_ao12 = session.best_ao12().unwrap();
+        assert!(best_ao12.eq_aprrox(&SolveTime::new(Duration::from_millis(13_770), None), 10));
+
+        session.get(6).unwrap().set_penalty(Some(Penalty::Plus2));
+        session.solve_updated(6);
+        session.get(8).unwrap().set_penalty(Some(Penalty::Dnf));
+        session.solve_updated(8);
+
+        let last_solve = session.last_solve().unwrap();
+        let last_time = last_solve.time();
+        assert!(last_time.eq_aprrox(&SolveTime::new(Duration::from_millis(15_020), None), 10));
+        let last_mo3 = last_solve.mo3().unwrap();
+        assert!(last_mo3.eq_aprrox(&SolveTime::new(Duration::from_millis(14_410), None), 10));
+        let last_ao5 = last_solve.ao5().unwrap();
+        assert!(last_ao5.eq_aprrox(&SolveTime::new(Duration::from_millis(14_410), None), 10));
+        let last_ao12 = last_solve.ao12().unwrap();
+        assert!(last_ao12.eq_aprrox(&SolveTime::new(Duration::from_millis(14_310), None), 10));
+        let best_time = session.best_solve().unwrap().time();
+        assert!(best_time.eq_aprrox(&SolveTime::new(Duration::from_millis(12_530), None), 10));
+        let best_mo3 = session.best_mo3().unwrap();
+        assert!(best_mo3.eq_aprrox(&SolveTime::new(Duration::from_millis(13_420), None), 10));
+        let best_ao5 = session.best_ao5().unwrap();
+        assert!(best_ao5.eq_aprrox(&SolveTime::new(Duration::from_millis(13_560), None), 10));
+        let best_ao12 = session.best_ao12().unwrap();
+        assert!(best_ao12.eq_aprrox(&SolveTime::new(Duration::from_millis(14_310), None), 10));
     }
 }

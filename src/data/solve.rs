@@ -63,6 +63,19 @@ impl SolveTime {
     pub fn is_plus2(&self) -> bool {
         self.penalty == Some(Penalty::Plus2)
     }
+
+    pub fn eq_aprrox(&self, other: &Self, eps_millis: u128) -> bool {
+        if other.is_dnf() {
+            self.is_dnf()
+        } else {
+            let eps = if self > other {
+                self - other
+            } else {
+                other - self
+            };
+            eps.recorded_time().unwrap().as_millis() <= eps_millis
+        }
+    }
 }
 
 impl PartialEq for SolveTime {
@@ -101,17 +114,17 @@ impl Display for SolveTime {
     }
 }
 
-impl Add for SolveTime {
-    type Output = Self;
+impl Add for &SolveTime {
+    type Output = SolveTime;
 
     fn add(self, rhs: Self) -> Self::Output {
         if self.is_dnf() || rhs.is_dnf() {
-            Self {
+            SolveTime {
                 time: Duration::ZERO,
                 penalty: Some(Penalty::Dnf),
             }
         } else {
-            Self {
+            SolveTime {
                 time: self.recorded_time().unwrap_or_default()
                     + rhs.recorded_time().unwrap_or_default(),
                 penalty: None,
@@ -120,22 +133,38 @@ impl Add for SolveTime {
     }
 }
 
-impl Sub for SolveTime {
-    type Output = Self;
+impl Add for SolveTime {
+    type Output = SolveTime;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        (&self).add(&rhs)
+    }
+}
+
+impl Sub for &SolveTime {
+    type Output = SolveTime;
 
     fn sub(self, rhs: Self) -> Self::Output {
         if self.is_dnf() || rhs.is_dnf() {
-            Self {
+            SolveTime {
                 time: Duration::ZERO,
                 penalty: Some(Penalty::Dnf),
             }
         } else {
-            Self {
+            SolveTime {
                 time: self.recorded_time().unwrap_or_default()
                     - rhs.recorded_time().unwrap_or_default(),
                 penalty: None,
             }
         }
+    }
+}
+
+impl Sub for SolveTime {
+    type Output = SolveTime;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        (&self).sub(&rhs)
     }
 }
 
@@ -323,16 +352,7 @@ mod test {
 
     fn test_mean(solves: &[SolveTime], expected: SolveTime) {
         let mean = solves.mean_of_n().unwrap();
-        if expected.is_dnf() {
-            assert!(mean.is_dnf())
-        } else {
-            let eps = if mean > expected {
-                mean - expected
-            } else {
-                expected - mean
-            };
-            assert!(eps.recorded_time().unwrap().as_millis() <= 10 as u128)
-        }
+        assert!(mean.eq_aprrox(&expected, 10))
     }
 
     #[test]
@@ -365,16 +385,7 @@ mod test {
 
     fn test_average(solves: &[SolveTime], expected: SolveTime) {
         let average = solves.average_of_n().unwrap();
-        if expected.is_dnf() {
-            assert!(average.is_dnf())
-        } else {
-            let eps = if average > expected {
-                average - expected
-            } else {
-                expected - average
-            };
-            assert!(eps.recorded_time().unwrap().as_millis() <= 10 as u128)
-        }
+        assert!(average.eq_aprrox(&expected, 10))
     }
 
     #[test]
