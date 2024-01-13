@@ -105,14 +105,18 @@ impl Add for SolveTime {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let time =
-            self.recorded_time().unwrap_or_default() + rhs.recorded_time().unwrap_or_default();
-        let penalty = if self.is_dnf() || rhs.is_dnf() {
-            Some(Penalty::Dnf)
+        if self.is_dnf() || rhs.is_dnf() {
+            Self {
+                time: Duration::ZERO,
+                penalty: Some(Penalty::Dnf),
+            }
         } else {
-            None
-        };
-        Self { time, penalty }
+            Self {
+                time: self.recorded_time().unwrap_or_default()
+                    + rhs.recorded_time().unwrap_or_default(),
+                penalty: None,
+            }
+        }
     }
 }
 
@@ -120,14 +124,18 @@ impl Sub for SolveTime {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        let time =
-            self.recorded_time().unwrap_or_default() - rhs.recorded_time().unwrap_or_default();
-        let penalty = if self.is_dnf() || rhs.is_dnf() {
-            Some(Penalty::Dnf)
+        if self.is_dnf() || rhs.is_dnf() {
+            Self {
+                time: Duration::ZERO,
+                penalty: Some(Penalty::Dnf),
+            }
         } else {
-            None
-        };
-        Self { time, penalty }
+            Self {
+                time: self.recorded_time().unwrap_or_default()
+                    - rhs.recorded_time().unwrap_or_default(),
+                penalty: None,
+            }
+        }
     }
 }
 
@@ -156,6 +164,37 @@ pub trait SolvesSeq {
     /// `mean_of_n`, but the fastest and slowest solves are excluded
     /// from the calculation.
     fn average_of_n(&self) -> Option<SolveTime>;
+}
+
+impl SolvesSeq for &[SolveTime] {
+    fn mean_of_n(&self) -> Option<SolveTime> {
+        let len = self.len() as u32;
+        if len == 0 {
+            return None;
+        }
+
+        let sum: SolveTime = self.iter().copied().sum();
+        Some(sum / len)
+    }
+
+    fn average_of_n(&self) -> Option<SolveTime> {
+        let len = self.len() as u32;
+        if len < 3 {
+            return None;
+        }
+
+        let it = self.iter().enumerate();
+        let (imax, _max) = it.clone().max_by_key(|&(_, st)| st)?;
+        let (imin, _min) = it.clone().min_by_key(|&(_, st)| st)?;
+        let sum = it.fold(SolveTime::default(), |acc, (i, st)| {
+            if i != imax && i != imin {
+                acc + *st
+            } else {
+                acc
+            }
+        });
+        Some(sum / (len - 2))
+    }
 }
 
 /// A solve.
@@ -279,6 +318,106 @@ mod test {
         assert_eq!(
             SolveTime::new(Duration::from_millis(12_400), Some(Penalty::Dnf)).to_string(),
             "DNF".to_string(),
+        );
+    }
+
+    fn test_mean(solves: &[SolveTime], expected: SolveTime) {
+        let mean = solves.mean_of_n().unwrap();
+        if expected.is_dnf() {
+            assert!(mean.is_dnf())
+        } else {
+            let eps = if mean > expected {
+                mean - expected
+            } else {
+                expected - mean
+            };
+            assert!(eps.recorded_time().unwrap().as_millis() <= 10 as u128)
+        }
+    }
+
+    #[test]
+    fn calculate_mean() {
+        test_mean(
+            &[
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), None),
+                SolveTime::new(Duration::from_millis(13_080), None),
+            ],
+            SolveTime::new(Duration::from_millis(13_840), None),
+        );
+        test_mean(
+            &[
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), Some(Penalty::Plus2)),
+                SolveTime::new(Duration::from_millis(13_080), None),
+            ],
+            SolveTime::new(Duration::from_millis(14_500), None),
+        );
+        test_mean(
+            &[
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), Some(Penalty::Dnf)),
+                SolveTime::new(Duration::from_millis(13_080), None),
+            ],
+            SolveTime::DNF,
+        );
+    }
+
+    fn test_average(solves: &[SolveTime], expected: SolveTime) {
+        let average = solves.average_of_n().unwrap();
+        if expected.is_dnf() {
+            assert!(average.is_dnf())
+        } else {
+            let eps = if average > expected {
+                average - expected
+            } else {
+                expected - average
+            };
+            assert!(eps.recorded_time().unwrap().as_millis() <= 10 as u128)
+        }
+    }
+
+    #[test]
+    fn calculate_averages() {
+        test_average(
+            &[
+                SolveTime::new(Duration::from_millis(13_440), None),
+                SolveTime::new(Duration::from_millis(14_320), None),
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), None),
+                SolveTime::new(Duration::from_millis(13_080), None),
+            ],
+            SolveTime::new(Duration::from_millis(13_610), None),
+        );
+        test_average(
+            &[
+                SolveTime::new(Duration::from_millis(13_440), None),
+                SolveTime::new(Duration::from_millis(14_320), None),
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), None),
+                SolveTime::new(Duration::from_millis(13_080), Some(Penalty::Plus2)),
+            ],
+            SolveTime::new(Duration::from_millis(14_280), None),
+        );
+        test_average(
+            &[
+                SolveTime::new(Duration::from_millis(13_440), None),
+                SolveTime::new(Duration::from_millis(14_320), Some(Penalty::Plus2)),
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), None),
+                SolveTime::new(Duration::from_millis(13_080), None),
+            ],
+            SolveTime::new(Duration::from_millis(14_140), None),
+        );
+        test_average(
+            &[
+                SolveTime::new(Duration::from_millis(13_440), None),
+                SolveTime::new(Duration::from_millis(14_320), Some(Penalty::Dnf)),
+                SolveTime::new(Duration::from_millis(15_900), None),
+                SolveTime::new(Duration::from_millis(12_530), Some(Penalty::Dnf)),
+                SolveTime::new(Duration::from_millis(13_080), None),
+            ],
+            SolveTime::DNF,
         );
     }
 }
