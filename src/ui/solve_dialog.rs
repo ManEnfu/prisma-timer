@@ -5,6 +5,8 @@ use gtk::glib;
 
 #[doc(hidden)]
 mod imp {
+    use std::cell::RefCell;
+
     use once_cell::sync::OnceCell;
 
     use super::*;
@@ -18,7 +20,7 @@ mod imp {
         #[property(get, construct_only)]
         pub index: OnceCell<u32>,
         #[property(get, construct_only)]
-        pub solve: OnceCell<Option<data::SessionItem>>,
+        pub solve: RefCell<Option<data::SessionItem>>,
     }
 
     #[glib::object_subclass]

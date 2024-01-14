@@ -29,3 +29,9 @@
 .timer-face.timer-face-large .time-label.small {
   font-size: 64pt;
 }
+
+.solve-dialog .time-label {
+  font-size: 48pt;
+  font-feature-settings: "tnum" 1;
+  font-weight: 400;
+}

@@ -6,6 +6,9 @@
     <property name="modal">True</property>
     <property name="default_width">350</property>
     <property name="default_height">480</property>
+    <style>
+      <class name="solve-dialog"/>
+    </style>
     <child>
       <object class="AdwToolbarView">
         <child type="top">
@@ -13,8 +16,52 @@
           </object>
         </child>
         <property name="content">
-          <object class="GtkLabel">
-            <property name="label">Solve</property>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkLabel" id="time_label">
+                <property name="halign">center</property>
+                <binding name="label">
+                  <lookup name="solve-time-string">
+                    <lookup name="solve">PtSolveDialog</lookup>
+                  </lookup>
+                </binding>
+                <style>
+                  <class name="time-label"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
+                <property name="halign">center</property>
+                <style>
+                  <class name="linked"/>
+                </style>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label">OK</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label">+2</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label">DNF</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="scramble_label">
+                <property name="halign">center</property>
+                <property name="label">Scramble</property>
+              </object>
+            </child>
           </object>
         </property>
       </object>
