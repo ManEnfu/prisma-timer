@@ -103,7 +103,7 @@ impl TimerStateMachine {
                     tick_cb_id.remove();
                     let solve_time = SolveTime::new(
                         duration + (Instant::now() - last_tick),
-                        if plus_2 { Some(Penalty::Plus2) } else { None },
+                        if plus_2 { Penalty::Plus2 } else { Penalty::Ok },
                     );
                     *imp.last_solve.write().expect(EXPECT_RWLOCK) = solve_time;
                     TimerStatePriv::Finished { solve_time }

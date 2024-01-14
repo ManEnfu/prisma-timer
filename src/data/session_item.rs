@@ -118,7 +118,7 @@ impl SessionItem {
     }
 
     /// Gets the penalty of this item.
-    pub(crate) fn get_penalty(&self) -> Option<Penalty> {
+    pub(crate) fn get_penalty(&self) -> Penalty {
         self.imp()
             .solve
             .borrow()
@@ -129,7 +129,7 @@ impl SessionItem {
     }
 
     /// Sets the penalty of this item.
-    pub(crate) fn set_penalty(&self, penalty: Option<Penalty>) {
+    pub(crate) fn set_penalty(&self, penalty: Penalty) {
         self.imp()
             .solve
             .borrow_mut()
