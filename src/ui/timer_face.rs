@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::data::{self, TimerState};
+use crate::ui;
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, glib};
@@ -30,6 +31,9 @@ mod imp {
         pub point: TemplateChild<gtk::Label>,
         #[template_child]
         pub centis: TemplateChild<gtk::Label>,
+
+        #[template_child]
+        pub penalty_selector: TemplateChild<ui::PenaltySelector>,
 
         #[template_child]
         pub statistics_box: TemplateChild<gtk::Box>,
@@ -158,6 +162,7 @@ impl TimerFace {
         let gestures = gtk::GestureClick::new();
         gestures.set_touch_only(false);
         gestures.set_button(gdk::BUTTON_PRIMARY);
+        gestures.set_propagation_phase(gtk::PropagationPhase::Capture);
         gestures.connect_pressed(glib::clone!(@weak self as obj => move |_, _, _, _| {
             obj.pressed_cb();
         }));
@@ -179,6 +184,13 @@ impl TimerFace {
         }
     }
 
+    #[template_callback]
+    fn notify_has_focus_cb(&self, _pspec: &glib::ParamSpec, _s: &Self) {
+        if !self.has_focus() {
+            self.released_cb();
+        }
+    }
+
     fn setup_callbacks(&self) {}
 
     pub(self) fn timer_state_changed_cb(&self, state: TimerState) {
@@ -188,25 +200,30 @@ impl TimerFace {
             TimerState::Idle => {
                 self.set_color_normal();
                 imp.statistics_box.set_visible(true);
+                imp.penalty_selector.set_visible(true);
             }
             TimerState::Wait => {
                 self.set_color_wait();
                 imp.statistics_box.set_visible(true);
+                imp.penalty_selector.set_visible(true);
             }
             TimerState::Ready => {
                 self.set_color_ready();
                 self.set_time_label(Duration::ZERO);
                 imp.statistics_box.set_visible(false);
+                imp.penalty_selector.set_visible(false);
             }
             TimerState::Timing { duration } => {
                 self.set_color_normal();
                 self.set_time_label(duration);
                 imp.statistics_box.set_visible(false);
+                imp.penalty_selector.set_visible(false);
             }
             TimerState::Finished { solve_time, .. } => {
                 self.set_color_wait();
                 self.set_time_label(solve_time.measured_time());
                 imp.statistics_box.set_visible(true);
+                imp.penalty_selector.set_visible(true);
                 if let Some(session) = self.session() {
                     session.add_solve(data::SolveData::new(solve_time, "".to_string()));
                 }

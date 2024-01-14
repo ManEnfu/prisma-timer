@@ -5,6 +5,9 @@
   <template class="PtTimerFace" parent="AdwBin">
     <property name="focusable">True</property>
     <property name="focus-on-click">True</property>
+    <signal name="notify::has-focus"
+            handler="notify_has_focus_cb"
+            swapped="true"/>
     <child>
       <object class="AdwBreakpointBin">
         <property name="width-request">280</property>
