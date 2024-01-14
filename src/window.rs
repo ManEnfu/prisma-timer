@@ -231,6 +231,11 @@ impl PrismaTimerWindow {
 
     #[template_callback]
     fn list_view_activated_cb(&self, position: u32, _list_view: &gtk::ListView) {
-        log::debug!("selected position: {position}");
+        let session = self.session().unwrap();
+        let index = session.n_items() - position - 1;
+
+        let dialog = ui::SolveDialog::new(session, index);
+        dialog.set_transient_for(Some(self));
+        dialog.present();
     }
 }

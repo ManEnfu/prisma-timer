@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <template class="PtSolveDialog" parent="AdwWindow">
+    <property name="modal">True</property>
+    <property name="default_width">350</property>
+    <property name="default_height">480</property>
+    <child>
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+          </object>
+        </child>
+        <property name="content">
+          <object class="GtkLabel">
+            <property name="label">Solve</property>
+          </object>
+        </property>
+      </object>
+    </child>
+  </template>
+</interface>
