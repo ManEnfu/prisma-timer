@@ -258,6 +258,18 @@ impl Session {
         }
     }
 
+    /// Notify changes in statistics of the session.
+    pub fn notify_statistics_changed(&self) {
+        self.notify_last_solve_string();
+        self.notify_last_mo3_string();
+        self.notify_last_ao5_string();
+        self.notify_last_ao12_string();
+        self.notify_best_solve_string();
+        self.notify_best_mo3_string();
+        self.notify_best_ao5_string();
+        self.notify_last_ao12_string();
+    }
+
     /// Notify updates of an item in this index.
     pub fn solve_updated(&self, index: usize) {
         let len = self.n_items() as usize;
@@ -273,14 +285,7 @@ impl Session {
         }
         let n_changed = 12.min(len - index);
         self.items_changed(index as u32, n_changed as u32, n_changed as u32);
-        self.notify_last_solve_string();
-        self.notify_last_mo3_string();
-        self.notify_last_ao5_string();
-        self.notify_last_ao12_string();
-        self.notify_best_solve_string();
-        self.notify_best_mo3_string();
-        self.notify_best_ao5_string();
-        self.notify_last_ao12_string();
+        self.notify_statistics_changed();
     }
 
     /// Notify updates of an `SessionItem` object in this session.
@@ -315,8 +320,7 @@ mod tests {
         })
     }
 
-    #[test]
-    fn simulate_session() {
+    fn build_test_session() -> Session {
         let session = Session::new();
         add_dummy_solve(
             &session,
@@ -366,91 +370,205 @@ mod tests {
             &session,
             SolveTime::new(Duration::from_millis(15_020), Penalty::Ok),
         );
+        session
+    }
 
+    #[test]
+    fn verify_last_solve() {
+        let session = build_test_session();
         let last_solve = session.last_solve().unwrap();
+
         let last_time = last_solve.time();
+
         assert!(last_time.eq_aprrox(
             &SolveTime::new(Duration::from_millis(15_020), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_last_mo3() {
+        let session = build_test_session();
+        let last_solve = session.last_solve().unwrap();
+
         let last_mo3 = last_solve.mo3().unwrap();
+
         assert!(last_mo3.eq_aprrox(
             &SolveTime::new(Duration::from_millis(14_410), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_last_ao5() {
+        let session = build_test_session();
+        let last_solve = session.last_solve().unwrap();
+
         let last_ao5 = last_solve.ao5().unwrap();
+
         assert!(last_ao5.eq_aprrox(
             &SolveTime::new(Duration::from_millis(13_720), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_last_ao12() {
+        let session = build_test_session();
+        let last_solve = session.last_solve().unwrap();
+
         let last_ao12 = last_solve.ao12().unwrap();
+
         assert!(last_ao12.eq_aprrox(
             &SolveTime::new(Duration::from_millis(13_770), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_solve() {
+        let session = build_test_session();
+
         let best_time = session.best_solve().unwrap().time();
+
         assert!(best_time.eq_aprrox(
             &SolveTime::new(Duration::from_millis(12_110), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_mo3() {
+        let session = build_test_session();
+
         let best_mo3 = session.best_mo3().unwrap();
         assert!(best_mo3.eq_aprrox(
             &SolveTime::new(Duration::from_millis(12_860), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_ao5() {
+        let session = build_test_session();
+
         let best_ao5 = session.best_ao5().unwrap();
         assert!(best_ao5.eq_aprrox(
             &SolveTime::new(Duration::from_millis(13_190), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_ao12() {
+        let session = build_test_session();
+
         let best_ao12 = session.best_ao12().unwrap();
         assert!(best_ao12.eq_aprrox(
             &SolveTime::new(Duration::from_millis(13_770), Penalty::Ok),
             10
         ));
+    }
 
+    fn build_and_modify_test_session() -> Session {
+        let session = build_test_session();
         session.get(6).unwrap().set_penalty(Penalty::Plus2);
         session.solve_updated(6);
         session.get(8).unwrap().set_penalty(Penalty::Dnf);
         session.solve_updated(8);
+        session
+    }
 
+    #[test]
+    fn verify_last_solve_after_modification() {
+        let session = build_and_modify_test_session();
         let last_solve = session.last_solve().unwrap();
+
         let last_time = last_solve.time();
         assert!(last_time.eq_aprrox(
             &SolveTime::new(Duration::from_millis(15_020), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_last_mo3_after_modification() {
+        let session = build_and_modify_test_session();
+        let last_solve = session.last_solve().unwrap();
+
         let last_mo3 = last_solve.mo3().unwrap();
         assert!(last_mo3.eq_aprrox(
             &SolveTime::new(Duration::from_millis(14_410), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_last_ao5_after_modification() {
+        let session = build_and_modify_test_session();
+        let last_solve = session.last_solve().unwrap();
+
         let last_ao5 = last_solve.ao5().unwrap();
         assert!(last_ao5.eq_aprrox(
             &SolveTime::new(Duration::from_millis(14_410), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_last_ao12_after_modification() {
+        let session = build_and_modify_test_session();
+        let last_solve = session.last_solve().unwrap();
+
         let last_ao12 = last_solve.ao12().unwrap();
         assert!(last_ao12.eq_aprrox(
             &SolveTime::new(Duration::from_millis(14_310), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_solve_after_modification() {
+        let session = build_and_modify_test_session();
+
         let best_time = session.best_solve().unwrap().time();
+
         assert!(best_time.eq_aprrox(
             &SolveTime::new(Duration::from_millis(12_530), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_mo3_after_modification() {
+        let session = build_and_modify_test_session();
+
         let best_mo3 = session.best_mo3().unwrap();
+
         assert!(best_mo3.eq_aprrox(
             &SolveTime::new(Duration::from_millis(13_420), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_ao5_after_modification() {
+        let session = build_and_modify_test_session();
+
         let best_ao5 = session.best_ao5().unwrap();
+
         assert!(best_ao5.eq_aprrox(
             &SolveTime::new(Duration::from_millis(13_560), Penalty::Ok),
             10
         ));
+    }
+
+    #[test]
+    fn verify_best_ao12_after_modification() {
+        let session = build_and_modify_test_session();
+
         let best_ao12 = session.best_ao12().unwrap();
+
         assert!(best_ao12.eq_aprrox(
             &SolveTime::new(Duration::from_millis(14_310), Penalty::Ok),
             10

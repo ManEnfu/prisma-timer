@@ -293,22 +293,18 @@ mod test {
             SolveTime::new(Duration::from_millis(8_350), Penalty::Ok).recorded_time(),
             Some(Duration::from_millis(8_350)),
         );
+    }
 
-        assert_eq!(
-            SolveTime::new(Duration::from_millis(62_920), Penalty::Ok).recorded_time(),
-            Some(Duration::from_millis(62_920)),
-        );
-
-        assert_eq!(
-            SolveTime::new(Duration::from_millis(142_250), Penalty::Ok).recorded_time(),
-            Some(Duration::from_millis(142_250)),
-        );
-
+    #[test]
+    fn get_recorded_time_plus2() {
         assert_eq!(
             SolveTime::new(Duration::from_millis(42_020), Penalty::Plus2).recorded_time(),
             Some(Duration::from_millis(44_020)),
         );
+    }
 
+    #[test]
+    fn get_recorded_time_dnf() {
         assert_eq!(
             SolveTime::new(Duration::from_millis(12_400), Penalty::Dnf).recorded_time(),
             None,
@@ -321,22 +317,18 @@ mod test {
             SolveTime::new(Duration::from_millis(8_350), Penalty::Ok).to_string(),
             "8.35".to_string(),
         );
+    }
 
-        assert_eq!(
-            SolveTime::new(Duration::from_millis(62_920), Penalty::Ok).to_string(),
-            "1:02.92".to_string(),
-        );
-
-        assert_eq!(
-            SolveTime::new(Duration::from_millis(142_250), Penalty::Ok).to_string(),
-            "2:22.25".to_string(),
-        );
-
+    #[test]
+    fn display_solve_time_plus2() {
         assert_eq!(
             SolveTime::new(Duration::from_millis(42_020), Penalty::Plus2).to_string(),
             "44.02+".to_string(),
         );
+    }
 
+    #[test]
+    fn display_solve_time_dnf() {
         assert_eq!(
             SolveTime::new(Duration::from_millis(12_400), Penalty::Dnf).to_string(),
             "DNF".to_string(),
@@ -358,6 +350,10 @@ mod test {
             ],
             SolveTime::new(Duration::from_millis(13_840), Penalty::Ok),
         );
+    }
+
+    #[test]
+    fn calculate_mean_with_plus2() {
         test_mean(
             &[
                 SolveTime::new(Duration::from_millis(15_900), Penalty::Ok),
@@ -366,6 +362,10 @@ mod test {
             ],
             SolveTime::new(Duration::from_millis(14_500), Penalty::Ok),
         );
+    }
+
+    #[test]
+    fn calculate_mean_with_dnf() {
         test_mean(
             &[
                 SolveTime::new(Duration::from_millis(15_900), Penalty::Ok),
@@ -382,7 +382,7 @@ mod test {
     }
 
     #[test]
-    fn calculate_averages() {
+    fn calculate_average() {
         test_average(
             &[
                 SolveTime::new(Duration::from_millis(13_440), Penalty::Ok),
@@ -393,6 +393,10 @@ mod test {
             ],
             SolveTime::new(Duration::from_millis(13_610), Penalty::Ok),
         );
+    }
+
+    #[test]
+    fn calculate_average_with_plus2() {
         test_average(
             &[
                 SolveTime::new(Duration::from_millis(13_440), Penalty::Ok),
@@ -403,6 +407,10 @@ mod test {
             ],
             SolveTime::new(Duration::from_millis(14_280), Penalty::Ok),
         );
+    }
+
+    #[test]
+    fn calculate_average_with_plus2_2() {
         test_average(
             &[
                 SolveTime::new(Duration::from_millis(13_440), Penalty::Ok),
@@ -413,6 +421,24 @@ mod test {
             ],
             SolveTime::new(Duration::from_millis(14_140), Penalty::Ok),
         );
+    }
+
+    #[test]
+    fn calculate_average_with_dnf() {
+        test_average(
+            &[
+                SolveTime::new(Duration::from_millis(13_440), Penalty::Ok),
+                SolveTime::new(Duration::from_millis(14_320), Penalty::Dnf),
+                SolveTime::new(Duration::from_millis(15_900), Penalty::Ok),
+                SolveTime::new(Duration::from_millis(12_530), Penalty::Ok),
+                SolveTime::new(Duration::from_millis(13_080), Penalty::Ok),
+            ],
+            SolveTime::new(Duration::from_millis(14_140), Penalty::Ok),
+        );
+    }
+
+    #[test]
+    fn calculate_average_with_two_dnf() {
         test_average(
             &[
                 SolveTime::new(Duration::from_millis(13_440), Penalty::Ok),
