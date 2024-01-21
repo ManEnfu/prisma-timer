@@ -84,6 +84,11 @@
               </object>
             </child>
             <child>
+              <object class="PtPenaltySelector" id="penalty_selector">
+                <property name="halign">center</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkBox" id="statistics_box">
                 <property name="orientation">vertical</property>
                 <property name="halign">center</property>

@@ -67,6 +67,7 @@ mod imp {
                 .expect(EXPECT_INITIALIZED)
                 .time
                 .penalty = v;
+            self.obj().notify_solve_time_string();
         }
     }
 

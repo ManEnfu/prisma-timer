@@ -48,6 +48,10 @@ mod imp {
 
         #[property(get, set)]
         pub session: RefCell<Option<data::Session>>,
+
+        #[property(get, set = Self::set_last_solve, nullable)]
+        pub last_solve: RefCell<Option<data::SessionItem>>,
+        last_solve_handlers: RefCell<Vec<glib::SignalHandlerId>>,
     }
 
     impl TimerFace {
@@ -78,6 +82,27 @@ mod imp {
                 ));
             }
             self.timer_state_machine.replace(v);
+        }
+
+        fn set_last_solve(&self, v: Option<data::SessionItem>) {
+            let obj = self.obj();
+            let mut handlers = self.last_solve_handlers.borrow_mut();
+
+            if let Some(solve) = self.last_solve.take() {
+                for handler in handlers.drain(..) {
+                    solve.disconnect(handler);
+                }
+            }
+
+            if let Some(solve) = &v {
+                handlers.push(solve.connect_notify_local(
+                    Some("solve-time-string"),
+                    glib::clone!(@weak obj => move |solve, _| {
+                        obj.last_solve_time_changed_cb(solve);
+                    }),
+                ))
+            }
+            self.last_solve.replace(v);
         }
     }
 
@@ -224,9 +249,7 @@ impl TimerFace {
                 self.set_time_label(solve_time.measured_time());
                 imp.statistics_box.set_visible(true);
                 imp.penalty_selector.set_visible(true);
-                if let Some(session) = self.session() {
-                    session.add_solve(data::SolveData::new(solve_time, "".to_string()));
-                }
+                self.submit_solve(data::SolveData::new(solve_time, "".to_string()));
             }
         }
     }
@@ -235,6 +258,19 @@ impl TimerFace {
         if let data::TimerState::Timing { duration } = sm.state() {
             self.set_time_label(duration);
         }
+    }
+
+    fn submit_solve(&self, solve: data::SolveData) {
+        let imp = self.imp();
+        if let Some(session) = self.session() {
+            let session_item = session.add_solve(solve);
+            imp.penalty_selector.set_solve(Some(session_item.clone()));
+            self.set_last_solve(Some(session_item));
+        }
+    }
+
+    fn last_solve_time_changed_cb(&self, solve: &data::SessionItem) {
+        self.session().unwrap().solve_updated_by_object(solve);
     }
 
     fn set_color_normal(&self) {

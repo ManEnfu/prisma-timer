@@ -158,13 +158,14 @@ impl Session {
     }
 
     /// Adds a solve to this session.
-    pub fn add_solve(&self, solve: SolveData) {
+    pub fn add_solve(&self, solve: SolveData) -> SessionItem {
         let item = SessionItem::new(solve);
-        self.imp().list.borrow_mut().push(item);
+        self.imp().list.borrow_mut().push(item.clone());
         let index = self.n_items() - 1;
         self.items_changed(index, 0, 1);
         self.solve_updated(index as usize);
         self.emit_by_name::<()>("solve-added", &[]);
+        item
     }
 
     /// Gets the best solve item of this session.
@@ -317,7 +318,7 @@ mod tests {
             time: solve_time,
             timestamp: SystemTime::now(),
             scramble: String::default(),
-        })
+        });
     }
 
     fn build_test_session() -> Session {
