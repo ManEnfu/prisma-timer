@@ -33,8 +33,17 @@
               </object>
             </child>
             <child>
-              <object class="PtPenaltySelector" id="penalty_selector">
+              <object class="GtkBox">
                 <property name="halign">center</property>
+                <binding name="visible">
+                  <closure type="gboolean" function="object_is_some">
+                    <lookup name="last-solve">PtTimerFace</lookup>
+                  </closure>
+                </binding>
+                <child>
+                  <object class="PtPenaltySelector" id="penalty_selector">
+                  </object>
+                </child>
               </object>
             </child>
             <child>
