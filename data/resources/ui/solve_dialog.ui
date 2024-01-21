@@ -28,46 +28,81 @@
           </object>
         </child>
         <property name="content">
-          <object class="GtkBox">
-            <property name="orientation">vertical</property>
-            <property name="spacing">6</property>
-            <child>
-              <object class="GtkLabel" id="time_label">
-                <property name="halign">center</property>
-                <binding name="label">
-                  <lookup name="solve-time-string">
-                    <lookup name="solve">PtSolveDialog</lookup>
-                  </lookup>
-                </binding>
-                <style>
-                  <class name="time-label"/>
-                </style>
+          <object class="GtkScrolledWindow">
+            <property name="vexpand">True</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="child">
+              <object class="AdwClamp">
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">6</property>
+                    <property name="margin-start">12</property>
+                    <property name="margin-end">12</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">6</property>
+                        <property name="margin-top">12</property>
+                        <property name="margin-bottom">12</property>
+                        <child>
+                          <object class="GtkLabel" id="time_label">
+                            <property name="halign">center</property>
+                            <binding name="label">
+                              <lookup name="solve-time-string">
+                                <lookup name="solve">PtSolveDialog</lookup>
+                              </lookup>
+                            </binding>
+                            <style>
+                              <class name="time-label"/>
+                            </style>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="PtPenaltySelector">
+                            <property name="halign">center</property>
+                            <binding name="solve">
+                              <lookup name="solve">PtSolveDialog</lookup>
+                            </binding>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwPreferencesGroup">
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="selection-mode">none</property>
+                            <style>
+                              <class name="boxed-list"/>
+                            </style>
+                            <child>
+                              <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Scramble</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Timestamp</property>
+                                <child type="suffix">
+                                  <object class="GtkLabel">
+                                    <binding name="label">
+                                      <lookup name="timestamp-string">
+                                        <lookup name="solve">PtSolveDialog</lookup>
+                                      </lookup>
+                                    </binding>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
               </object>
-            </child>
-            <child>
-              <object class="PtPenaltySelector">
-                <property name="halign">center</property>
-                <binding name="solve">
-                  <lookup name="solve">PtSolveDialog</lookup>
-                </binding>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="scramble_label">
-                <property name="halign">center</property>
-                <property name="label">Scramble</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="timestamp_label">
-                <property name="halign">center</property>
-                <binding name="label">
-                  <lookup name="timestamp-string">
-                    <lookup name="solve">PtSolveDialog</lookup>
-                  </lookup>
-                </binding>
-              </object>
-            </child>
+            </property>
           </object>
         </property>
       </object>
