@@ -266,7 +266,6 @@ impl TimerFace {
     fn last_solve_time_changed_cb(&self, solve: &data::SessionItem) {
         let imp = self.imp();
         imp.time_label.set_solve_time(solve.time());
-        self.session().unwrap().solve_updated_by_object(solve);
     }
 
     fn set_color_normal(&self) {
