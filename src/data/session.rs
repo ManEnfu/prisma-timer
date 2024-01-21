@@ -109,9 +109,14 @@ mod imp {
     impl ObjectImpl for Session {
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder("solve-added")
-                    .param_types(Vec::<SignalType>::new())
-                    .build()]
+                vec![
+                    Signal::builder("solve-added")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                    Signal::builder("solve-removed")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                ]
             });
             SIGNALS.as_ref()
         }
@@ -188,6 +193,7 @@ impl Session {
 
         self.items_changed(index as u32, 1, 0);
         self.solve_updated(index);
+        self.emit_by_name::<()>("solve-removed", &[]);
         Some(solve)
     }
 

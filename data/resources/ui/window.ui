@@ -15,133 +15,137 @@
       </object>
     </child>
     <property name="content">
-      <object class="AdwOverlaySplitView" id="split_view">
-        <property name="min-sidebar-width">300sp</property>
-        <property name="max-sidebar-width">360sp</property>
-        <property name="show-sidebar"
-                  bind-source="toggle_pane_button"
-                  bind-property="active"
-                  bind-flags="sync-create|bidirectional"/>
-        <binding name="collapsed">
-          <closure type="gboolean" function="or_boolean">
-            <lookup name="should-collapse">PrismaTimerWindow</lookup>
-            <lookup name="focus-mode">PrismaTimerWindow</lookup>
-          </closure>
-        </binding>
-        <property name="sidebar">
-          <object class="AdwNavigationPage">
-            <property name="title" translatable="yes">Session</property>
-            <property name="child">
-              <object class="AdwToolbarView">
-                <child type="top">
-                  <object class="AdwHeaderBar" id="sidebar_header_bar">
-                    <child type="start">
-                      <object class="GtkButton" id="sedabar_back_button">
-                        <property name="icon-name">go-previous-symbolic</property>
-                        <property name="action-name">sidebar.hide</property>
-                        <binding name="visible">
-                          <lookup name="collapsed">split_view</lookup>
-                        </binding>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <property name="content">
-                  <object class="GtkStack" id="sidebar_stack">
-                    <property name="visible-child">search_result_empty</property>
-                    <property name="transition-type">crossfade</property>
-                    <child>
-                      <object class="GtkStackPage">
-                        <property name="name">empty</property>
-                        <property name="child">
-                          <object class="AdwStatusPage" id="search_result_empty">
-                            <property name="icon-name">preferences-system-time-symbolic</property>
-                            <property name="title">No solves</property>
-                            <property name="description">Get started by starting the timer.</property>
-                            <property name="vexpand">true</property>
-                            <style>
-                              <class name="compact"/>
-                            </style>
+      <object class="AdwToastOverlay" id="toast_overlay">
+        <child>
+          <object class="AdwOverlaySplitView" id="split_view">
+            <property name="min-sidebar-width">300sp</property>
+            <property name="max-sidebar-width">360sp</property>
+            <property name="show-sidebar"
+                      bind-source="toggle_pane_button"
+                      bind-property="active"
+                      bind-flags="sync-create|bidirectional"/>
+            <binding name="collapsed">
+              <closure type="gboolean" function="or_boolean">
+                <lookup name="should-collapse">PrismaTimerWindow</lookup>
+                <lookup name="focus-mode">PrismaTimerWindow</lookup>
+              </closure>
+            </binding>
+            <property name="sidebar">
+              <object class="AdwNavigationPage">
+                <property name="title" translatable="yes">Session</property>
+                <property name="child">
+                  <object class="AdwToolbarView">
+                    <child type="top">
+                      <object class="AdwHeaderBar" id="sidebar_header_bar">
+                        <child type="start">
+                          <object class="GtkButton" id="sedabar_back_button">
+                            <property name="icon-name">go-previous-symbolic</property>
+                            <property name="action-name">sidebar.hide</property>
+                            <binding name="visible">
+                              <lookup name="collapsed">split_view</lookup>
+                            </binding>
                           </object>
-                        </property>
+                        </child>
                       </object>
                     </child>
-                    <child>
-                      <object class="GtkStackPage">
-                        <property name="name">list</property>
-                        <property name="child">
-                          <object class="GtkScrolledWindow" id="scrolled_window">
-                            <property name="vexpand">True</property>
-                            <child>
-                              <object class="GtkListView" id="list_view">
-                                <property name="single-click-activate">True</property>
+                    <property name="content">
+                      <object class="GtkStack" id="sidebar_stack">
+                        <property name="visible-child">search_result_empty</property>
+                        <property name="transition-type">crossfade</property>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">empty</property>
+                            <property name="child">
+                              <object class="AdwStatusPage" id="search_result_empty">
+                                <property name="icon-name">preferences-system-time-symbolic</property>
+                                <property name="title">No solves</property>
+                                <property name="description">Get started by starting the timer.</property>
+                                <property name="vexpand">true</property>
                                 <style>
-                                  <class name="navigation-sidebar"/>
+                                  <class name="compact"/>
                                 </style>
-                                <signal name="activate" handler="list_view_activated_cb" swapped="true"/>
                               </object>
-                            </child>
+                            </property>
                           </object>
-                        </property>
+                        </child>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">list</property>
+                            <property name="child">
+                              <object class="GtkScrolledWindow" id="scrolled_window">
+                                <property name="vexpand">True</property>
+                                <child>
+                                  <object class="GtkListView" id="list_view">
+                                    <property name="single-click-activate">True</property>
+                                    <style>
+                                      <class name="navigation-sidebar"/>
+                                    </style>
+                                    <signal name="activate" handler="list_view_activated_cb" swapped="true"/>
+                                  </object>
+                                </child>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
                       </object>
-                    </child>
+                    </property>
                   </object>
                 </property>
               </object>
             </property>
-          </object>
-        </property>
-        <property name="content">
-          <object class="AdwNavigationPage">
-            <property name="title" translatable="yes">Prisma Timer</property>
-            <property name="child">
-              <object class="AdwToolbarView">
-                <child type="top">
-                  <object class="AdwHeaderBar" id="content_header_bar">
-                    <child type="start">
-                      <object class="GtkToggleButton" id="toggle_pane_button">
-                        <property name="icon-name">sidebar-show-symbolic</property>
-                        <property name="active">True</property>
-                        <binding name="visible">
-                          <closure type="gboolean" function="and_boolean">
-                            <lookup name="should-collapse">PrismaTimerWindow</lookup>
-                            <closure type="gboolean" function="invert_boolean">
-                              <lookup name="focus-mode">PrismaTimerWindow</lookup>
-                            </closure>
-                          </closure>
-                        </binding>
+            <property name="content">
+              <object class="AdwNavigationPage">
+                <property name="title" translatable="yes">Prisma Timer</property>
+                <property name="child">
+                  <object class="AdwToolbarView">
+                    <child type="top">
+                      <object class="AdwHeaderBar" id="content_header_bar">
+                        <child type="start">
+                          <object class="GtkToggleButton" id="toggle_pane_button">
+                            <property name="icon-name">sidebar-show-symbolic</property>
+                            <property name="active">True</property>
+                            <binding name="visible">
+                              <closure type="gboolean" function="and_boolean">
+                                <lookup name="should-collapse">PrismaTimerWindow</lookup>
+                                <closure type="gboolean" function="invert_boolean">
+                                  <lookup name="focus-mode">PrismaTimerWindow</lookup>
+                                </closure>
+                              </closure>
+                            </binding>
+                          </object>
+                        </child>
+                        <child type="end">
+                          <object class="GtkMenuButton">
+                            <property name="primary">True</property>
+                            <property name="icon-name">open-menu-symbolic</property>
+                            <property name="tooltip-text" translatable="yes">Menu</property>
+                            <property name="menu-model">primary_menu</property>
+                            <property name="visible"
+                                      bind-source="PrismaTimerWindow"
+                                      bind-property="focus-mode"
+                                      bind-flags="sync-create|invert-boolean"/>
+                          </object>
+                        </child>
                       </object>
                     </child>
-                    <child type="end">
-                      <object class="GtkMenuButton">
-                        <property name="primary">True</property>
-                        <property name="icon-name">open-menu-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Menu</property>
-                        <property name="menu-model">primary_menu</property>
-                        <property name="visible"
+                    <property name="content">
+                      <object class="PtTimerFace" id="timer_face">
+                        <property name="timer-state-machine"
                                   bind-source="PrismaTimerWindow"
-                                  bind-property="focus-mode"
-                                  bind-flags="sync-create|invert-boolean"/>
+                                  bind-property="timer-state-machine"
+                                  bind-flags="sync-create"/>
+                        <property name="session"
+                                  bind-source="PrismaTimerWindow"
+                                  bind-property="session"
+                                  bind-flags="sync-create"/>
                       </object>
-                    </child>
-                  </object>
-                </child>
-                <property name="content">
-                  <object class="PtTimerFace" id="timer_face">
-                    <property name="timer-state-machine"
-                              bind-source="PrismaTimerWindow"
-                              bind-property="timer-state-machine"
-                              bind-flags="sync-create"/>
-                    <property name="session"
-                              bind-source="PrismaTimerWindow"
-                              bind-property="session"
-                              bind-flags="sync-create"/>
+                    </property>
                   </object>
                 </property>
               </object>
             </property>
           </object>
-        </property>
+        </child>
       </object>
     </property>
   </template>

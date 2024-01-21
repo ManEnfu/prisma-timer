@@ -17,6 +17,8 @@ mod imp {
     #[properties(wrapper_type = super::PrismaTimerWindow)]
     pub struct PrismaTimerWindow {
         #[template_child]
+        pub toast_overlay: TemplateChild<adw::ToastOverlay>,
+        #[template_child]
         pub sidebar_header_bar: TemplateChild<adw::HeaderBar>,
         #[template_child]
         pub content_header_bar: TemplateChild<adw::HeaderBar>,
@@ -174,6 +176,14 @@ impl PrismaTimerWindow {
             }),
         );
 
+        session.connect_closure(
+            "solve-removed",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_solve_removed_cb();
+            }),
+        );
+
         let sort_model = gtk::SortListModel::new(
             Some(session),
             Some(gtk::CustomSorter::new(|a, b| {
@@ -227,6 +237,12 @@ impl PrismaTimerWindow {
     fn session_solve_added_cb(&self) {
         let imp = self.imp();
         imp.list_view.scroll_to(0, gtk::ListScrollFlags::NONE, None);
+    }
+
+    fn session_solve_removed_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay
+            .add_toast(adw::Toast::new("Solve Removed"));
     }
 
     #[template_callback]
