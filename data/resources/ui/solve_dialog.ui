@@ -33,27 +33,11 @@
               </object>
             </child>
             <child>
-              <object class="GtkBox">
-                <property name="orientation">horizontal</property>
+              <object class="PtPenaltySelector">
                 <property name="halign">center</property>
-                <style>
-                  <class name="linked"/>
-                </style>
-                <child>
-                  <object class="GtkButton">
-                    <property name="label">OK</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkButton">
-                    <property name="label">+2</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkButton">
-                    <property name="label">DNF</property>
-                  </object>
-                </child>
+                <binding name="solve">
+                  <lookup name="solve">PtSolveDialog</lookup>
+                </binding>
               </object>
             </child>
             <child>
