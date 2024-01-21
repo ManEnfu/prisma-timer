@@ -20,6 +20,7 @@ mod imp {
     pub struct SessionItem {
         #[property(name = "solve-time-string", type = String, get = Self::get_recorded_time_string)]
         #[property(name = "penalty", type = Penalty, get = Self::get_penalty, set = Self::set_penalty, builder(Penalty::default()))]
+        #[property(name = "timestamp-string", type = String, get = Self::get_timestamp_string)]
         pub solve: RefCell<Option<SolveData>>,
         #[property(name = "mo3-string", type = String, get = Self::get_mo3_string)]
         pub mo3: Cell<Option<SolveTime>>,
@@ -68,6 +69,17 @@ mod imp {
                 .time
                 .penalty = v;
             self.obj().notify_solve_time_string();
+        }
+
+        fn get_timestamp_string(&self) -> String {
+            let timestamp = self
+                .solve
+                .borrow()
+                .as_ref()
+                .expect(EXPECT_INITIALIZED)
+                .timestamp;
+            let dt = chrono::DateTime::<chrono::Local>::from(timestamp);
+            dt.format("%Y-%m-%d %H:%M:%S").to_string()
         }
     }
 

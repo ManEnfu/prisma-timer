@@ -58,6 +58,16 @@
                 <property name="label">Scramble</property>
               </object>
             </child>
+            <child>
+              <object class="GtkLabel" id="timestamp_label">
+                <property name="halign">center</property>
+                <binding name="label">
+                  <lookup name="timestamp-string">
+                    <lookup name="solve">PtSolveDialog</lookup>
+                  </lookup>
+                </binding>
+              </object>
+            </child>
           </object>
         </property>
       </object>
