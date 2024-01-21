@@ -36,7 +36,7 @@
                 <property name="child">
                   <object class="GtkBox">
                     <property name="orientation">vertical</property>
-                    <property name="spacing">6</property>
+                    <property name="spacing">18</property>
                     <property name="margin-start">12</property>
                     <property name="margin-end">12</property>
                     <child>
@@ -93,6 +93,38 @@
                                     </binding>
                                   </object>
                                 </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwPreferencesGroup" id="average_group">
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="selection-mode">none</property>
+                            <style>
+                              <class name="boxed-list"/>
+                            </style>
+                            <child>
+                              <object class="AdwExpanderRow" id="ao5_expander_row">
+                                <property name="title" translatable="yes">Average of 5</property>
+                                <binding name="subtitle">
+                                  <lookup name="ao5-string">
+                                    <lookup name="solve">PtSolveDialog</lookup>
+                                  </lookup>
+                                </binding>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwExpanderRow" id="ao12_expander_row">
+                                <property name="title" translatable="yes">Average of 12</property>
+                                <binding name="subtitle">
+                                  <lookup name="ao12-string">
+                                    <lookup name="solve">PtSolveDialog</lookup>
+                                  </lookup>
+                                </binding>
                               </object>
                             </child>
                           </object>

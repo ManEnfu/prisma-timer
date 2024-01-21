@@ -15,6 +15,13 @@ mod imp {
     #[template(resource = "/io/github/manenfu/PrismaTimer/ui/solve_dialog.ui")]
     #[properties(wrapper_type = super::SolveDialog)]
     pub struct SolveDialog {
+        #[template_child]
+        pub average_group: TemplateChild<adw::PreferencesGroup>,
+        #[template_child]
+        pub ao5_expander_row: TemplateChild<adw::ExpanderRow>,
+        #[template_child]
+        pub ao12_expander_row: TemplateChild<adw::ExpanderRow>,
+
         #[property(get, construct_only)]
         pub session: OnceCell<data::Session>,
         #[property(get, construct_only)]
@@ -72,7 +79,27 @@ impl SolveDialog {
     }
 
     fn setup(&self) {
-        self.set_title(Some(&Self::create_window_title(self.index())));
+        let imp = self.imp();
+        let session = self.session();
+        let index = self.index();
+        self.set_title(Some(&Self::create_window_title(index)));
+        imp.average_group.set_visible(index >= 4);
+        Self::setup_average_expander(&imp.ao5_expander_row, session.get_slice(index as usize, 5));
+        Self::setup_average_expander(
+            &imp.ao12_expander_row,
+            session.get_slice(index as usize, 12),
+        );
+    }
+
+    fn setup_average_expander(
+        expander_row: &adw::ExpanderRow,
+        solves: Option<Vec<data::SessionItem>>,
+    ) {
+        if let Some(_solves) = solves {
+            expander_row.set_visible(true);
+        } else {
+            expander_row.set_visible(false);
+        }
     }
 
     #[template_callback(function)]

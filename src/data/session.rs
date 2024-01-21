@@ -163,6 +163,17 @@ impl Session {
         self.imp().solve_list.borrow().get(index).cloned()
     }
 
+    pub fn get_slice(&self, index: usize, n_item: usize) -> Option<Vec<SessionItem>> {
+        if n_item > index + 1 {
+            return None;
+        }
+        self.imp()
+            .solve_list
+            .borrow()
+            .get(index + 1 - n_item..index + 1)
+            .map(|s| s.to_vec())
+    }
+
     /// Adds a solve to this session.
     pub fn add_solve(&self, solve: SolveData) -> SessionItem {
         let item = SessionItem::new(solve);
