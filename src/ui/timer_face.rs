@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::data::{self, TimerState};
+use crate::ui;
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, glib};
@@ -21,15 +22,10 @@ mod imp {
     #[properties(wrapper_type = super::TimerFace)]
     pub struct TimerFace {
         #[template_child]
-        pub minutes: TemplateChild<gtk::Label>,
+        pub time_label: TemplateChild<ui::TimeLabel>,
+
         #[template_child]
-        pub colon: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub seconds: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub point: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub centis: TemplateChild<gtk::Label>,
+        pub penalty_selector: TemplateChild<ui::PenaltySelector>,
 
         #[template_child]
         pub statistics_box: TemplateChild<gtk::Box>,
@@ -44,6 +40,10 @@ mod imp {
 
         #[property(get, set)]
         pub session: RefCell<Option<data::Session>>,
+
+        #[property(get, set = Self::set_last_solve, nullable)]
+        pub last_solve: RefCell<Option<data::SessionItem>>,
+        last_solve_handlers: RefCell<Vec<glib::SignalHandlerId>>,
     }
 
     impl TimerFace {
@@ -74,6 +74,27 @@ mod imp {
                 ));
             }
             self.timer_state_machine.replace(v);
+        }
+
+        fn set_last_solve(&self, v: Option<data::SessionItem>) {
+            let obj = self.obj();
+            let mut handlers = self.last_solve_handlers.borrow_mut();
+
+            if let Some(solve) = self.last_solve.take() {
+                for handler in handlers.drain(..) {
+                    solve.disconnect(handler);
+                }
+            }
+
+            if let Some(solve) = &v {
+                handlers.push(solve.connect_notify_local(
+                    Some("solve-time-string"),
+                    glib::clone!(@weak obj => move |solve, _| {
+                        obj.last_solve_time_changed_cb(solve);
+                    }),
+                ))
+            }
+            self.last_solve.replace(v);
         }
     }
 
@@ -119,11 +140,12 @@ mod imp {
 
             obj.add_css_class("timer-face");
 
-            obj.set_time_label(Duration::ZERO);
+            self.time_label.set_duration(Duration::ZERO);
             obj.setup_event_controllers();
             obj.setup_callbacks();
         }
     }
+
     impl WidgetImpl for TimerFace {}
     impl BinImpl for TimerFace {}
 }
@@ -158,6 +180,7 @@ impl TimerFace {
         let gestures = gtk::GestureClick::new();
         gestures.set_touch_only(false);
         gestures.set_button(gdk::BUTTON_PRIMARY);
+        gestures.set_propagation_phase(gtk::PropagationPhase::Capture);
         gestures.connect_pressed(glib::clone!(@weak self as obj => move |_, _, _, _| {
             obj.pressed_cb();
         }));
@@ -179,6 +202,13 @@ impl TimerFace {
         }
     }
 
+    #[template_callback]
+    fn notify_has_focus_cb(&self, _pspec: &glib::ParamSpec, _s: &Self) {
+        if !self.has_focus() {
+            self.released_cb();
+        }
+    }
+
     fn setup_callbacks(&self) {}
 
     pub(self) fn timer_state_changed_cb(&self, state: TimerState) {
@@ -188,36 +218,55 @@ impl TimerFace {
             TimerState::Idle => {
                 self.set_color_normal();
                 imp.statistics_box.set_visible(true);
+                imp.penalty_selector.set_visible(true);
             }
             TimerState::Wait => {
                 self.set_color_wait();
                 imp.statistics_box.set_visible(true);
+                imp.penalty_selector.set_visible(true);
             }
             TimerState::Ready => {
                 self.set_color_ready();
-                self.set_time_label(Duration::ZERO);
+                imp.time_label.set_duration(Duration::ZERO);
                 imp.statistics_box.set_visible(false);
+                imp.penalty_selector.set_visible(false);
             }
             TimerState::Timing { duration } => {
                 self.set_color_normal();
-                self.set_time_label(duration);
+                imp.time_label.set_duration(duration);
                 imp.statistics_box.set_visible(false);
+                imp.penalty_selector.set_visible(false);
             }
             TimerState::Finished { solve_time, .. } => {
                 self.set_color_wait();
-                self.set_time_label(solve_time.measured_time());
+                imp.time_label.set_solve_time(solve_time);
                 imp.statistics_box.set_visible(true);
-                if let Some(session) = self.session() {
-                    session.add_solve(data::SolveData::new(solve_time, "".to_string()));
-                }
+                imp.penalty_selector.set_visible(true);
+                self.submit_solve(data::SolveData::new(solve_time, "".to_string()));
             }
         }
     }
 
     pub(self) fn tick_cb(&self, sm: &data::TimerStateMachine) {
+        let imp = self.imp();
         if let data::TimerState::Timing { duration } = sm.state() {
-            self.set_time_label(duration);
+            imp.time_label.set_duration(duration);
         }
+    }
+
+    fn submit_solve(&self, solve: data::SolveData) {
+        let imp = self.imp();
+        if let Some(session) = self.session() {
+            let session_item = session.add_solve(solve);
+            imp.penalty_selector.set_solve(Some(session_item.clone()));
+            self.set_last_solve(Some(session_item));
+        }
+    }
+
+    fn last_solve_time_changed_cb(&self, solve: &data::SessionItem) {
+        let imp = self.imp();
+        imp.time_label.set_solve_time(solve.time());
+        self.session().unwrap().solve_updated_by_object(solve);
     }
 
     fn set_color_normal(&self) {
@@ -233,26 +282,6 @@ impl TimerFace {
     fn set_color_ready(&self) {
         self.remove_css_class("wait");
         self.add_css_class("ready");
-    }
-
-    fn set_time_label(&self, duration: Duration) {
-        let imp = self.imp();
-        let s = duration.as_secs();
-        let m = s / 60;
-        let s = s % 60;
-        let c = duration.subsec_millis() / 10;
-
-        if m > 0 {
-            imp.minutes.set_visible(true);
-            imp.colon.set_visible(true);
-            imp.minutes.set_label(&format!("{:0>1}", m));
-            imp.seconds.set_label(&format!("{:0>2}", s));
-        } else {
-            imp.minutes.set_visible(false);
-            imp.colon.set_visible(false);
-            imp.seconds.set_label(&format!("{:0>1}", s));
-        }
-        imp.centis.set_label(&format!("{:0>2}", c));
     }
 
     #[template_callback]

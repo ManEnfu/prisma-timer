@@ -19,6 +19,7 @@ mod imp {
     #[properties(wrapper_type = super::SessionItem)]
     pub struct SessionItem {
         #[property(name = "solve-time-string", type = String, get = Self::get_recorded_time_string)]
+        #[property(name = "penalty", type = Penalty, get = Self::get_penalty, set = Self::set_penalty, builder(Penalty::default()))]
         pub solve: RefCell<Option<SolveData>>,
         #[property(name = "mo3-string", type = String, get = Self::get_mo3_string)]
         pub mo3: Cell<Option<SolveTime>>,
@@ -48,6 +49,25 @@ mod imp {
 
         fn get_ao12_string(&self) -> String {
             self.ao12.get().map_or(String::default(), |t| t.to_string())
+        }
+
+        fn get_penalty(&self) -> Penalty {
+            self.solve
+                .borrow()
+                .as_ref()
+                .expect(EXPECT_INITIALIZED)
+                .time
+                .penalty
+        }
+
+        fn set_penalty(&self, v: Penalty) {
+            self.solve
+                .borrow_mut()
+                .as_mut()
+                .expect(EXPECT_INITIALIZED)
+                .time
+                .penalty = v;
+            self.obj().notify_solve_time_string();
         }
     }
 
@@ -115,29 +135,6 @@ impl SessionItem {
     pub(crate) fn set_ao12(&self, v: Option<SolveTime>) {
         self.imp().ao12.set(v);
         self.notify_ao12_string();
-    }
-
-    /// Gets the penalty of this item.
-    pub(crate) fn get_penalty(&self) -> Option<Penalty> {
-        self.imp()
-            .solve
-            .borrow()
-            .as_ref()
-            .expect(EXPECT_INITIALIZED)
-            .time
-            .penalty
-    }
-
-    /// Sets the penalty of this item.
-    pub(crate) fn set_penalty(&self, penalty: Option<Penalty>) {
-        self.imp()
-            .solve
-            .borrow_mut()
-            .as_mut()
-            .expect(EXPECT_INITIALIZED)
-            .time
-            .penalty = penalty;
-        self.notify_solve_time_string();
     }
 
     /// Gets the timestamp of this item.

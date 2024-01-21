@@ -5,6 +5,9 @@
   <template class="PtTimerFace" parent="AdwBin">
     <property name="focusable">True</property>
     <property name="focus-on-click">True</property>
+    <signal name="notify::has-focus"
+            handler="notify_has_focus_cb"
+            swapped="true"/>
     <child>
       <object class="AdwBreakpointBin">
         <property name="width-request">280</property>
@@ -26,56 +29,19 @@
             <property name="valign">center</property>
             <property name="spacing">12</property>
             <child>
+              <object class="PtTimeLabel" id="time_label">
+              </object>
+            </child>
+            <child>
               <object class="GtkBox">
-                <property name="orientation">horizontal</property>
                 <property name="halign">center</property>
+                <binding name="visible">
+                  <closure type="gboolean" function="object_is_some">
+                    <lookup name="last-solve">PtTimerFace</lookup>
+                  </closure>
+                </binding>
                 <child>
-                  <object class="GtkLabel" id="minutes">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">0</property>
-                    <style>
-                      <class name="time-label"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="colon">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">∶</property>
-                    <style>
-                      <class name="time-label"/>
-                      <class name="colon"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="seconds">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">00</property>
-                    <style>
-                      <class name="time-label"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="point">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">.</property>
-                    <style>
-                      <class name="time-label"/>
-                      <class name="small"/>
-                      <class name="colon"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="centis">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">00</property>
-                    <style>
-                      <class name="time-label"/>
-                      <class name="small"/>
-                    </style>
+                  <object class="PtPenaltySelector" id="penalty_selector">
                   </object>
                 </child>
               </object>

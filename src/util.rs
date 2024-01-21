@@ -1,3 +1,5 @@
+use gtk::glib;
+
 pub struct TemplateCallbacks {}
 
 #[gtk::template_callbacks(functions)]
@@ -20,5 +22,10 @@ impl TemplateCallbacks {
     #[template_callback]
     pub fn invert_boolean(a: bool) -> bool {
         !a
+    }
+
+    #[template_callback]
+    pub fn object_is_some(obj: Option<glib::Object>) -> bool {
+        obj.is_some()
     }
 }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <template class="PtPenaltySelector" parent="AdwBin">
+    <child>
+      <object class="GtkBox">
+        <style>
+          <class name="linked"/>
+        </style>
+        <child>
+          <object class="GtkToggleButton" id="ok_button">
+            <property name="label">OK</property>
+            <signal name="clicked"
+                    handler="ok_button_clicked_cb"
+                    swapped="true"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="plus2_button">
+            <property name="group">ok_button</property>
+            <property name="label">+2</property>
+            <signal name="clicked"
+                    handler="plus2_button_clicked_cb"
+                    swapped="true"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="dnf_button">
+            <property name="group">ok_button</property>
+            <property name="label">DNF</property>
+            <signal name="clicked"
+                    handler="dnf_button_clicked_cb"
+                    swapped="true"/>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
