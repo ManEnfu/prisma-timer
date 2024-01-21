@@ -29,58 +29,7 @@
             <property name="valign">center</property>
             <property name="spacing">12</property>
             <child>
-              <object class="GtkBox">
-                <property name="orientation">horizontal</property>
-                <property name="halign">center</property>
-                <child>
-                  <object class="GtkLabel" id="minutes">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">0</property>
-                    <style>
-                      <class name="time-label"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="colon">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">∶</property>
-                    <style>
-                      <class name="time-label"/>
-                      <class name="colon"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="seconds">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">00</property>
-                    <style>
-                      <class name="time-label"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="point">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">.</property>
-                    <style>
-                      <class name="time-label"/>
-                      <class name="small"/>
-                      <class name="colon"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="centis">
-                    <property name="valign">baseline-center</property>
-                    <property name="label">00</property>
-                    <style>
-                      <class name="time-label"/>
-                      <class name="small"/>
-                    </style>
-                  </object>
-                </child>
+              <object class="PtTimeLabel" id="time_label">
               </object>
             </child>
             <child>

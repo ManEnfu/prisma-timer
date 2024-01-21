@@ -22,15 +22,7 @@ mod imp {
     #[properties(wrapper_type = super::TimerFace)]
     pub struct TimerFace {
         #[template_child]
-        pub minutes: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub colon: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub seconds: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub point: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub centis: TemplateChild<gtk::Label>,
+        pub time_label: TemplateChild<ui::TimeLabel>,
 
         #[template_child]
         pub penalty_selector: TemplateChild<ui::PenaltySelector>,
@@ -148,11 +140,12 @@ mod imp {
 
             obj.add_css_class("timer-face");
 
-            obj.set_time_label(Duration::ZERO);
+            self.time_label.set_duration(Duration::ZERO);
             obj.setup_event_controllers();
             obj.setup_callbacks();
         }
     }
+
     impl WidgetImpl for TimerFace {}
     impl BinImpl for TimerFace {}
 }
@@ -234,19 +227,19 @@ impl TimerFace {
             }
             TimerState::Ready => {
                 self.set_color_ready();
-                self.set_time_label(Duration::ZERO);
+                imp.time_label.set_duration(Duration::ZERO);
                 imp.statistics_box.set_visible(false);
                 imp.penalty_selector.set_visible(false);
             }
             TimerState::Timing { duration } => {
                 self.set_color_normal();
-                self.set_time_label(duration);
+                imp.time_label.set_duration(duration);
                 imp.statistics_box.set_visible(false);
                 imp.penalty_selector.set_visible(false);
             }
             TimerState::Finished { solve_time, .. } => {
                 self.set_color_wait();
-                self.set_time_label(solve_time.measured_time());
+                imp.time_label.set_solve_time(solve_time);
                 imp.statistics_box.set_visible(true);
                 imp.penalty_selector.set_visible(true);
                 self.submit_solve(data::SolveData::new(solve_time, "".to_string()));
@@ -255,8 +248,9 @@ impl TimerFace {
     }
 
     pub(self) fn tick_cb(&self, sm: &data::TimerStateMachine) {
+        let imp = self.imp();
         if let data::TimerState::Timing { duration } = sm.state() {
-            self.set_time_label(duration);
+            imp.time_label.set_duration(duration);
         }
     }
 
@@ -270,6 +264,8 @@ impl TimerFace {
     }
 
     fn last_solve_time_changed_cb(&self, solve: &data::SessionItem) {
+        let imp = self.imp();
+        imp.time_label.set_solve_time(solve.time());
         self.session().unwrap().solve_updated_by_object(solve);
     }
 
@@ -286,26 +282,6 @@ impl TimerFace {
     fn set_color_ready(&self) {
         self.remove_css_class("wait");
         self.add_css_class("ready");
-    }
-
-    fn set_time_label(&self, duration: Duration) {
-        let imp = self.imp();
-        let s = duration.as_secs();
-        let m = s / 60;
-        let s = s % 60;
-        let c = duration.subsec_millis() / 10;
-
-        if m > 0 {
-            imp.minutes.set_visible(true);
-            imp.colon.set_visible(true);
-            imp.minutes.set_label(&format!("{:0>1}", m));
-            imp.seconds.set_label(&format!("{:0>2}", s));
-        } else {
-            imp.minutes.set_visible(false);
-            imp.colon.set_visible(false);
-            imp.seconds.set_label(&format!("{:0>1}", s));
-        }
-        imp.centis.set_label(&format!("{:0>2}", c));
     }
 
     #[template_callback]
