@@ -79,4 +79,35 @@ impl SolveDialog {
     fn create_window_title(index: u32) -> String {
         format!("Solve {}", index + 1)
     }
+
+    #[template_callback]
+    fn remove_button_clicked_cb(&self, _button: &gtk::Button) {
+        self.confirm_remove_dialog();
+    }
+
+    fn confirm_remove_dialog(&self) {
+        let builder = gtk::Builder::from_resource(
+            "/io/github/manenfu/PrismaTimer/ui/confirm_remove_dialog.ui",
+        );
+        let dialog = builder
+            .object::<adw::MessageDialog>("dialog")
+            .expect("Expected dialog");
+        dialog.set_transient_for(Some(self));
+        dialog.connect_response(
+            Some("remove"),
+            glib::clone!(@weak self as obj => move |dialog, _| {
+                dialog.close();
+                dialog.set_transient_for(Option::<&Self>::None);
+                obj.remove_solve();
+            }),
+        );
+        dialog.present();
+    }
+
+    fn remove_solve(&self) {
+        if let Some(solve) = self.solve() {
+            self.session().remove_solve_by_object(&solve);
+        }
+        self.close();
+    }
 }

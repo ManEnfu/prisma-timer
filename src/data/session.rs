@@ -161,9 +161,10 @@ impl Session {
     /// Adds a solve to this session.
     pub fn add_solve(&self, solve: SolveData) -> SessionItem {
         let item = SessionItem::new(solve);
-        let handler = item.connect_solve_time_string_notify(glib::clone!(@weak self as obj => move |solve| {
-            obj.solve_updated_by_object(solve);
-        }));
+        let handler =
+            item.connect_solve_time_string_notify(glib::clone!(@weak self as obj => move |solve| {
+                obj.solve_updated_by_object(solve);
+            }));
         self.imp().solve_list.borrow_mut().push(item.clone());
         self.imp().handler_list.borrow_mut().push(handler);
 
@@ -192,12 +193,7 @@ impl Session {
 
     /// Remove `SessionItem` object in this session.
     pub fn remove_solve_by_object(&self, obj: &SessionItem) -> Option<SessionItem> {
-        self.imp()
-            .solve_list
-            .borrow()
-            .iter()
-            .position(|item| item == obj)
-            .and_then(|i| self.remove_solve(i))
+        self.get_solve_index(obj).and_then(|i| self.remove_solve(i))
     }
 
     /// Gets the best solve item of this session.
@@ -323,11 +319,19 @@ impl Session {
 
     /// Notify updates of an `SessionItem` object in this session.
     pub fn solve_updated_by_object(&self, obj: &SessionItem) {
-        if let Some(index) = self.imp().solve_list.borrow().iter().position(|item| item == obj) {
+        if let Some(index) = self.get_solve_index(obj) {
             self.solve_updated(index);
         } else {
             log::warn!("PtSessionItem object is not in Session");
         }
+    }
+
+    fn get_solve_index(&self, obj: &SessionItem) -> Option<usize> {
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .position(|item| item == obj)
     }
 }
 

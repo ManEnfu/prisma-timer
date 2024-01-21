@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <object class="AdwMessageDialog" id="dialog">
+    <property name="heading" translatable="yes">Remove Solve?</property>
+    <property name="body" translatable="yes">This operation cannot be undone.</property>
+    <property name="default-response">cancel</property>
+    <property name="close-response">cancel</property>
+    <responses>
+      <response id="cancel" translatable="yes">_Cancel</response>
+      <response id="remove" translatable="yes" appearance="destructive">_Remove</response>
+    </responses>
+  </object>
+</interface>
