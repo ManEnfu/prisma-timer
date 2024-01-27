@@ -1,4 +1,4 @@
-use crate::data::{SessionItem, SolveData, SolveTime, SolvesSeq};
+use crate::data::{SessionItem, SolveData, SolveStatistic, SolveTime};
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};

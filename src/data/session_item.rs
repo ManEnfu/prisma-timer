@@ -4,7 +4,7 @@ use gtk::glib;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 
-use crate::data::{Penalty, SolveData, SolveTime, SolvesSeq};
+use crate::data::{Penalty, SolveData, SolveTime};
 
 const EXPECT_INITIALIZED: &str = "`SolveData` haven't yet initialized in `SessionItem`";
 
@@ -160,34 +160,8 @@ impl SessionItem {
     }
 }
 
-impl SolvesSeq for &[SessionItem] {
-    fn mean_of_n(&self) -> Option<SolveTime> {
-        let len = self.len() as u32;
-        if len == 0 {
-            return None;
-        }
-
-        let sum: SolveTime = self.iter().map(|item| item.time()).sum();
-        Some(sum / len)
-    }
-
-    fn average_of_n(&self) -> Option<SolveTime> {
-        let len = self.len() as u32;
-        if len < 3 {
-            return None;
-        }
-
-        let it = self.iter().map(|se| se.time()).enumerate();
-
-        let (imax, _max) = it.clone().max_by_key(|&(_, st)| st)?;
-        let (imin, _min) = it.clone().min_by_key(|&(_, st)| st)?;
-        let sum = it.fold(SolveTime::default(), |acc, (i, st)| {
-            if i != imax && i != imin {
-                acc + st
-            } else {
-                acc
-            }
-        });
-        Some(sum / (len - 2))
+impl From<&SessionItem> for SolveTime {
+    fn from(value: &SessionItem) -> Self {
+        value.time()
     }
 }
