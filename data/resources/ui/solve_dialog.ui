@@ -4,6 +4,8 @@
   <requires lib="Adw" version="1.0"/>
   <template class="PtSolveDialog" parent="AdwWindow">
     <property name="modal">True</property>
+    <property name="width-request">320</property>
+    <property name="height-request">350</property>
     <property name="default_width">350</property>
     <property name="default_height">480</property>
     <style>

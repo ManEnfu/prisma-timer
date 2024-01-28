@@ -4,8 +4,8 @@
   <requires lib="Adw" version="1.0"/>
   <template class="PrismaTimerWindow" parent="AdwApplicationWindow">
     <property name="title">Prisma Timer</property>
-    <property name="width-request">280</property>
-    <property name="height-request">200</property>
+    <property name="width-request">350</property>
+    <property name="height-request">350</property>
     <property name="default-width">800</property>
     <property name="default-height">600</property>
     <child>
