@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <template class="PtSolveDialog" parent="AdwWindow">
+    <property name="modal">True</property>
+    <property name="default_width">350</property>
+    <property name="default_height">480</property>
+    <style>
+      <class name="solve-dialog"/>
+    </style>
+    <child>
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <child type="start">
+              <object class="GtkButton">
+                <property name="icon-name">user-trash-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Remove Solve</property>
+                <signal name="clicked"
+                        handler="remove_button_clicked_cb"
+                        swapped="true"/>
+                <style>
+                  <class name="destructive-action"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+        <property name="content">
+          <object class="GtkScrolledWindow">
+            <property name="vexpand">True</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="child">
+              <object class="AdwClamp">
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">18</property>
+                    <property name="margin-start">12</property>
+                    <property name="margin-end">12</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-bottom">12</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">6</property>
+                        <property name="margin-top">12</property>
+                        <property name="margin-bottom">12</property>
+                        <child>
+                          <object class="GtkLabel" id="time_label">
+                            <property name="halign">center</property>
+                            <binding name="label">
+                              <lookup name="solve-time-string">
+                                <lookup name="solve">PtSolveDialog</lookup>
+                              </lookup>
+                            </binding>
+                            <style>
+                              <class name="time-label"/>
+                            </style>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="PtPenaltySelector">
+                            <property name="halign">center</property>
+                            <binding name="solve">
+                              <lookup name="solve">PtSolveDialog</lookup>
+                            </binding>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwPreferencesGroup">
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="selection-mode">none</property>
+                            <style>
+                              <class name="boxed-list"/>
+                            </style>
+                            <child>
+                              <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Scramble</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Timestamp</property>
+                                <child type="suffix">
+                                  <object class="GtkLabel">
+                                    <binding name="label">
+                                      <lookup name="timestamp-string">
+                                        <lookup name="solve">PtSolveDialog</lookup>
+                                      </lookup>
+                                    </binding>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwPreferencesGroup" id="average_group">
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="selection-mode">none</property>
+                            <style>
+                              <class name="boxed-list"/>
+                            </style>
+                            <child>
+                              <object class="AdwExpanderRow" id="ao5_expander_row">
+                                <property name="title" translatable="yes">Average of 5</property>
+                                <binding name="subtitle">
+                                  <lookup name="ao5-string">
+                                    <lookup name="solve">PtSolveDialog</lookup>
+                                  </lookup>
+                                </binding>
+                                <child>
+                                  <object class="PtTextAreaRow" id="ao5_report_area">
+                                    <property name="title" translatable="yes">Summary</property>
+                                    <property name="editable">False</property>
+                                    <style>
+                                      <class name="monospace"/>
+                                    </style>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwExpanderRow" id="ao12_expander_row">
+                                <property name="title" translatable="yes">Average of 12</property>
+                                <binding name="subtitle">
+                                  <lookup name="ao12-string">
+                                    <lookup name="solve">PtSolveDialog</lookup>
+                                  </lookup>
+                                </binding>
+                                <child>
+                                  <object class="PtTextAreaRow" id="ao12_report_area">
+                                    <property name="title" translatable="yes">Summary</property>
+                                    <property name="editable">False</property>
+                                    <style>
+                                      <class name="monospace"/>
+                                    </style>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </property>
+          </object>
+        </property>
+      </object>
+    </child>
+  </template>
+</interface>

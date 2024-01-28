@@ -29,3 +29,23 @@
 .timer-face.timer-face-large .time-label.small {
   font-size: 64pt;
 }
+
+.solve-dialog .time-label {
+  font-size: 48pt;
+  font-feature-settings: "tnum" 1;
+  font-weight: 400;
+}
+
+.text-area-row {
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.text-area-row box.text-view {
+  border-radius: 6px;
+  background: @card_bg_color;
+}
+
+.text-area-row box.text-view > textview {
+  background: none;
+}

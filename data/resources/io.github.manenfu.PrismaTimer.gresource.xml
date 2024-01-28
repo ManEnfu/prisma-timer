@@ -5,9 +5,13 @@
 
     <file preprocess="xml-stripblanks">ui/penalty_selector.ui</file>
     <file preprocess="xml-stripblanks">ui/session_item_row.ui</file>
+    <file preprocess="xml-stripblanks">ui/text_area_row.ui</file>
     <file preprocess="xml-stripblanks">ui/time_label.ui</file>
     <file preprocess="xml-stripblanks">ui/timer_face.ui</file>
 
+    <file preprocess="xml-stripblanks">ui/confirm_remove_dialog.ui</file>
+
+    <file preprocess="xml-stripblanks">ui/solve_dialog.ui</file>
     <file preprocess="xml-stripblanks">ui/shortcuts_window.ui</file>
     <file preprocess="xml-stripblanks">ui/window.ui</file>
   </gresource>
