@@ -1,4 +1,5 @@
-use crate::data;
+use crate::data::{self, SolveStatistic};
+use crate::ui;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gtk::glib;
@@ -20,7 +21,11 @@ mod imp {
         #[template_child]
         pub ao5_expander_row: TemplateChild<adw::ExpanderRow>,
         #[template_child]
+        pub ao5_report_area: TemplateChild<ui::TextAreaRow>,
+        #[template_child]
         pub ao12_expander_row: TemplateChild<adw::ExpanderRow>,
+        #[template_child]
+        pub ao12_report_area: TemplateChild<ui::TextAreaRow>,
 
         #[property(get, construct_only)]
         pub session: OnceCell<data::Session>,
@@ -28,6 +33,9 @@ mod imp {
         pub index: OnceCell<u32>,
         #[property(get, construct_only)]
         pub solve: RefCell<Option<data::SessionItem>>,
+
+        pub last_5_solves: RefCell<Option<Vec<data::SessionItem>>>,
+        pub last_12_solves: RefCell<Option<Vec<data::SessionItem>>>,
     }
 
     #[glib::object_subclass]
@@ -84,19 +92,53 @@ impl SolveDialog {
         let index = self.index();
         self.set_title(Some(&Self::create_window_title(index)));
         imp.average_group.set_visible(index >= 4);
-        Self::setup_average_expander(&imp.ao5_expander_row, session.get_slice(index as usize, 5));
-        Self::setup_average_expander(
-            &imp.ao12_expander_row,
-            session.get_slice(index as usize, 12),
+
+        imp.last_5_solves
+            .replace(session.get_slice(index as usize, 5));
+        imp.last_12_solves
+            .replace(session.get_slice(index as usize, 12));
+        self.update_ao5_expander_row();
+        self.update_ao12_expander_row();
+
+        if let Some(solve) = self.solve() {
+            solve.connect_notify_local(
+                Some("solve-time-string"),
+                glib::clone!(@weak self as obj => move |_, _| {
+                    obj.update_ao5_expander_row();
+                    obj.update_ao12_expander_row();
+                }),
+            );
+        }
+    }
+
+    fn update_ao5_expander_row(&self) {
+        let imp = self.imp();
+        Self::update_average_expander(
+            &imp.ao5_expander_row,
+            &imp.ao5_report_area,
+            imp.last_5_solves.borrow().as_ref().map(Vec::as_slice),
         );
     }
 
-    fn setup_average_expander(
+    fn update_ao12_expander_row(&self) {
+        let imp = self.imp();
+        Self::update_average_expander(
+            &imp.ao12_expander_row,
+            &imp.ao12_report_area,
+            imp.last_12_solves.borrow().as_ref().map(Vec::as_slice),
+        );
+    }
+
+    fn update_average_expander(
         expander_row: &adw::ExpanderRow,
-        solves: Option<Vec<data::SessionItem>>,
+        text_area_row: &ui::TextAreaRow,
+        solves: Option<&[data::SessionItem]>,
     ) {
-        if let Some(_solves) = solves {
+        if let Some(solves) = solves {
             expander_row.set_visible(true);
+            text_area_row
+                .buffer()
+                .set_text(&generate_average_of_n_report(solves).unwrap_or_default());
         } else {
             expander_row.set_visible(false);
         }
@@ -137,4 +179,18 @@ impl SolveDialog {
         }
         self.close();
     }
+}
+
+fn generate_average_of_n_report(solves: &[data::SessionItem]) -> Option<String> {
+    let header = [
+        format!("avg of {}: {}\n\n", solves.len(), solves.average_of_n()?),
+        "Time list:\n".to_string(),
+    ]
+    .into_iter();
+    let time_list = solves
+        .iter()
+        .map(Into::<data::SolveTime>::into)
+        .enumerate()
+        .map(&|(i, time)| format!("{}. {}\n", i + 1, time));
+    Some(String::from_iter(header.chain(time_list)))
 }

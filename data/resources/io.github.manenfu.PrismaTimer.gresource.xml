@@ -5,6 +5,7 @@
 
     <file preprocess="xml-stripblanks">ui/penalty_selector.ui</file>
     <file preprocess="xml-stripblanks">ui/session_item_row.ui</file>
+    <file preprocess="xml-stripblanks">ui/text_area_row.ui</file>
     <file preprocess="xml-stripblanks">ui/time_label.ui</file>
     <file preprocess="xml-stripblanks">ui/timer_face.ui</file>
 
