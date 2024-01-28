@@ -182,6 +182,8 @@ impl SolveDialog {
 }
 
 fn generate_average_of_n_report(solves: &[data::SessionItem]) -> Option<String> {
+    let ibest = solves.best_solve_index()?;
+    let iworst = solves.worst_solve_index()?;
     let header = [
         format!("avg of {}: {}\n\n", solves.len(), solves.average_of_n()?),
         "Time list:\n".to_string(),
@@ -191,6 +193,12 @@ fn generate_average_of_n_report(solves: &[data::SessionItem]) -> Option<String> 
         .iter()
         .map(Into::<data::SolveTime>::into)
         .enumerate()
-        .map(&|(i, time)| format!("{}. {}\n", i + 1, time));
+        .map(|(i, time)| {
+            if i == ibest || i == iworst {
+                format!("{}. ({})\n", i + 1, time)
+            } else {
+                format!("{}. {}\n", i + 1, time)
+            }
+        });
     Some(String::from_iter(header.chain(time_list)))
 }
