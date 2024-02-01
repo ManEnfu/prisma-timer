@@ -1,253 +1,130 @@
-use std::mem;
-use std::time::Duration;
-use std::time::Instant;
-
-use crate::data::{Penalty, SolveTime, StateMachine, TimerState, TimerStatePriv};
-use crate::prelude::*;
-use crate::subclass::prelude::*;
+use adw::prelude::*;
+use adw::subclass::prelude::*;
 use gtk::glib;
-
-const WAIT_TIMEOUT: u64 = 500;
-const TICK_INTERVAL: u64 = 10;
-
-const EXPECT_RWLOCK: &str = "Error accessing timer state.";
 
 #[doc(hidden)]
 mod imp {
-    use std::sync::RwLock;
-
-    use gtk::glib::subclass::{Signal, SignalType};
-    use once_cell::sync::Lazy;
-
     use super::*;
 
-    #[derive(Debug, Default)]
-    pub struct TimerStateMachine {
-        pub(super) state: RwLock<TimerStatePriv>,
-        pub(super) last_solve: RwLock<SolveTime>,
+    #[derive(Clone, Copy)]
+    #[repr(C)]
+    pub struct TimerStateMachineInterface {
+        pub type_iface: glib::gobject_ffi::GTypeInterface,
+        pub press: fn(&super::TimerStateMachine),
+        pub release: fn(&super::TimerStateMachine),
+        pub press_timeout: fn(&super::TimerStateMachine),
+        pub tick: fn(&super::TimerStateMachine),
     }
 
-    #[glib::object_subclass]
-    impl ObjectSubclass for TimerStateMachine {
+    #[glib::object_interface]
+    unsafe impl ObjectInterface for TimerStateMachineInterface {
         const NAME: &'static str = "PtTimerStateMachine";
-        type Type = super::TimerStateMachine;
-        type Interfaces = (StateMachine,);
-    }
-
-    impl ObjectImpl for TimerStateMachine {
-        fn signals() -> &'static [Signal] {
-            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![
-                    Signal::builder("state-changed")
-                        .param_types(Vec::<SignalType>::new())
-                        .build(),
-                    Signal::builder("tick")
-                        .param_types(Vec::<SignalType>::new())
-                        .build(),
-                ]
-            });
-            SIGNALS.as_ref()
-        }
-    }
-
-    impl StateMachineImpl for TimerStateMachine {
-        fn press(&self) {
-            self.obj().press_cb();
-        }
-
-        fn release(&self) {
-            self.obj().release_cb();
-        }
-
-        fn press_timeout(&self) {
-            self.obj().press_timeout_cb();
-        }
-
-        fn tick(&self) {
-            self.obj().tick_cb();
-        }
+        type Prerequisites = ();
     }
 }
 
 glib::wrapper! {
-    /// The state machine of a timer.
-    pub struct TimerStateMachine(ObjectSubclass<imp::TimerStateMachine>)
-        @implements StateMachine;
+    /// The interface for timer state machines.
+    pub struct TimerStateMachine(ObjectInterface<imp::TimerStateMachineInterface>);
 }
 
-impl TimerStateMachine {
-    /// Creates a new state machine.
-    pub fn new() -> Self {
-        glib::Object::builder().build()
+/// Trait that contains defined method in `StateMachine`
+pub trait TimerStateMachineExt: 'static {
+    fn press(&self);
+    fn release(&self);
+    fn press_timeout(&self);
+    fn tick(&self);
+}
+
+impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
+    fn press(&self) {
+        let iface = self.interface::<TimerStateMachine>().unwrap();
+        (iface.as_ref().press)(self.upcast_ref())
     }
 
-    /// Gets the state of the machine.
-    pub fn state(&self) -> TimerState {
-        let imp = self.imp();
-        imp.state.read().expect(EXPECT_RWLOCK).to_state()
+    fn release(&self) {
+        let iface = self.interface::<TimerStateMachine>().unwrap();
+        (iface.as_ref().release)(self.upcast_ref())
     }
 
-    /// Gets the last time recorded by the timer.
-    pub fn last_solve(&self) -> SolveTime {
-        let imp = self.imp();
-        *imp.last_solve.read().expect(EXPECT_RWLOCK)
+    fn press_timeout(&self) {
+        let iface = self.interface::<TimerStateMachine>().unwrap();
+        (iface.as_ref().press_timeout)(self.upcast_ref())
     }
 
-    /// Called when timer trigger is pressed.
-    pub(crate) fn press_cb(&self) {
-        let imp = self.imp();
-        let mut state_changed = true;
-
-        {
-            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
-            let o_state = mem::take(&mut *state);
-
-            let n_state = match o_state {
-                TimerStatePriv::Idle => {
-                    let timeout = glib::timeout_add_once(
-                        Duration::from_millis(WAIT_TIMEOUT),
-                        glib::clone!(@weak self as obj => move || {
-                            obj.press_timeout();
-                        }),
-                    );
-                    TimerStatePriv::Wait {
-                        timeout_id: timeout,
-                    }
-                }
-                TimerStatePriv::Timing {
-                    last_tick,
-                    tick_cb_id,
-                    duration,
-                    plus_2,
-                } => {
-                    tick_cb_id.remove();
-                    let solve_time = SolveTime::new(
-                        duration + (Instant::now() - last_tick),
-                        if plus_2 { Penalty::Plus2 } else { Penalty::Ok },
-                    );
-                    *imp.last_solve.write().expect(EXPECT_RWLOCK) = solve_time;
-                    TimerStatePriv::Finished { solve_time }
-                }
-                s => {
-                    state_changed = false;
-                    s
-                }
-            };
-
-            if state_changed {
-                log::debug!("--press--> {:?}", &n_state)
-            }
-            let _ = mem::replace(&mut *state, n_state);
-        }
-
-        if state_changed {
-            self.emit_by_name::<()>("state-changed", &[])
-        }
-    }
-
-    /// Called when timer trigger is released.
-    pub(crate) fn release_cb(&self) {
-        let imp = self.imp();
-        let mut state_changed = true;
-
-        {
-            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
-            let o_state = mem::take(&mut *state);
-
-            let n_state = match o_state {
-                TimerStatePriv::Wait { timeout_id } => {
-                    timeout_id.remove();
-                    TimerStatePriv::Idle
-                }
-                TimerStatePriv::Ready => {
-                    let tick_cb = glib::timeout_add(
-                        Duration::from_millis(TICK_INTERVAL),
-                        glib::clone!(@strong self as obj => move || {
-                            obj.tick();
-                            return glib::ControlFlow::Continue;
-                        }),
-                    );
-                    TimerStatePriv::Timing {
-                        last_tick: Instant::now(),
-                        tick_cb_id: tick_cb,
-                        duration: Duration::ZERO,
-                        plus_2: false,
-                    }
-                }
-                TimerStatePriv::Finished { .. } => TimerStatePriv::Idle,
-                s => {
-                    state_changed = false;
-                    s
-                }
-            };
-
-            if state_changed {
-                log::debug!("--release--> {:?}", &n_state)
-            }
-            let _ = mem::replace(&mut *state, n_state);
-        }
-
-        if state_changed {
-            self.emit_by_name::<()>("state-changed", &[])
-        }
-    }
-
-    /// Called when duration of a trigger press exceeds certain threshold.
-    pub(crate) fn press_timeout_cb(&self) {
-        let imp = self.imp();
-        let mut state_changed = true;
-
-        {
-            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
-            let o_state = mem::take(&mut *state);
-
-            let n_state = match o_state {
-                TimerStatePriv::Wait { timeout_id } => {
-                    timeout_id.remove();
-                    TimerStatePriv::Ready
-                }
-                s => {
-                    state_changed = false;
-                    s
-                }
-            };
-
-            if state_changed {
-                log::debug!("--timeout--> {:?}", &n_state)
-            }
-            let _ = mem::replace(&mut *state, n_state);
-        }
-
-        if state_changed {
-            self.emit_by_name::<()>("state-changed", &[])
-        }
-    }
-
-    /// Called on every tick during `Timing` state.
-    pub(crate) fn tick_cb(&self) {
-        let imp = self.imp();
-
-        {
-            let mut state = imp.state.write().expect(EXPECT_RWLOCK);
-
-            if let TimerStatePriv::Timing {
-                last_tick,
-                duration,
-                ..
-            } = &mut *state
-            {
-                let new_tick = Instant::now();
-                *duration += new_tick - *last_tick;
-                *last_tick = new_tick;
-            }
-        }
-
-        self.emit_by_name::<()>("tick", &[])
+    fn tick(&self) {
+        let iface = self.interface::<TimerStateMachine>().unwrap();
+        (iface.as_ref().tick)(self.upcast_ref())
     }
 }
 
-impl Default for TimerStateMachine {
-    fn default() -> Self {
-        Self::new()
+/// Trait that must be implemented by objects that implements `StateMachine`.
+pub trait TimerStateMachineImpl: ObjectImpl {
+    fn press(&self);
+    fn release(&self);
+    fn press_timeout(&self);
+    fn tick(&self);
+}
+
+unsafe impl<T> IsImplementable<T> for TimerStateMachine
+where
+    T: TimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
+{
+    fn interface_init(iface: &mut glib::Interface<Self>) {
+        let iface = iface.as_mut();
+
+        iface.press = state_machine_press_trampoline::<T>;
+        iface.release = state_machine_release_trampoline::<T>;
+        iface.press_timeout = state_machine_press_timeout_trampoline::<T>;
+        iface.tick = state_machine_tick_trampoline::<T>;
     }
+}
+
+fn state_machine_press_trampoline<T>(state_machine: &TimerStateMachine)
+where
+    T: TimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
+{
+    state_machine
+        .downcast_ref::<T::Type>()
+        .unwrap()
+        .imp()
+        .press();
+}
+
+fn state_machine_release_trampoline<T>(state_machine: &TimerStateMachine)
+where
+    T: TimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
+{
+    state_machine
+        .downcast_ref::<T::Type>()
+        .unwrap()
+        .imp()
+        .release();
+}
+
+fn state_machine_press_timeout_trampoline<T>(state_machine: &TimerStateMachine)
+where
+    T: TimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
+{
+    state_machine
+        .downcast_ref::<T::Type>()
+        .unwrap()
+        .imp()
+        .press_timeout();
+}
+
+fn state_machine_tick_trampoline<T>(state_machine: &TimerStateMachine)
+where
+    T: TimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
+{
+    state_machine
+        .downcast_ref::<T::Type>()
+        .unwrap()
+        .imp()
+        .tick();
 }

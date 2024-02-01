@@ -35,7 +35,7 @@ mod imp {
 
         /// The state machine is shared between widgets within this window.
         #[property(get, set = Self::set_timer_state_machine)]
-        pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
+        pub timer_state_machine: RefCell<Option<data::SimpleTimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
 
         #[property(get, set)]
@@ -54,7 +54,7 @@ mod imp {
     }
 
     impl PrismaTimerWindow {
-        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
+        fn set_timer_state_machine(&self, v: Option<data::SimpleTimerStateMachine>) {
             let obj = self.obj();
             let mut handlers = self.timer_state_machine_handlers.borrow_mut();
 
@@ -68,7 +68,7 @@ mod imp {
                 handlers.push(sm.connect_closure(
                     "state-changed",
                     false,
-                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
+                    glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
                         obj.timer_state_changed_cb(sm.state());
                     }),
                 ));
@@ -107,7 +107,7 @@ mod imp {
             self.parent_constructed();
             let obj = self.obj();
 
-            obj.set_timer_state_machine(data::TimerStateMachine::new());
+            obj.set_timer_state_machine(data::SimpleTimerStateMachine::new());
 
             obj.setup_gactions();
             obj.setup_event_controllers();

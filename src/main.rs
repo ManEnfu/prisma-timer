@@ -14,13 +14,13 @@ use gtk::prelude::*;
 use gtk::{gio, glib};
 
 mod prelude {
-    pub use crate::data::StateMachineExt;
+    pub use crate::data::TimerStateMachineExt;
     pub use adw::prelude::*;
 }
 
 mod subclass {
     pub mod prelude {
-        pub use crate::data::StateMachineImpl;
+        pub use crate::data::TimerStateMachineImpl;
         pub use adw::subclass::prelude::*;
     }
 }

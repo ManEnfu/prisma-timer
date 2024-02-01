@@ -35,7 +35,7 @@ mod imp {
         pub last_ao12_label: TemplateChild<gtk::Label>,
 
         #[property(get, set = Self::set_timer_state_machine)]
-        pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
+        pub timer_state_machine: RefCell<Option<data::SimpleTimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
 
         #[property(get, set)]
@@ -47,7 +47,7 @@ mod imp {
     }
 
     impl TimerFace {
-        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
+        fn set_timer_state_machine(&self, v: Option<data::SimpleTimerStateMachine>) {
             let obj = self.obj();
             let mut handlers = self.timer_state_machine_handlers.borrow_mut();
 
@@ -61,14 +61,14 @@ mod imp {
                 handlers.push(sm.connect_closure(
                     "state-changed",
                     false,
-                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
+                    glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
                         obj.timer_state_changed_cb(sm.state());
                     }),
                 ));
                 handlers.push(sm.connect_closure(
                     "tick",
                     false,
-                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
+                    glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
                         obj.tick_cb(sm);
                     }),
                 ));
@@ -247,7 +247,7 @@ impl TimerFace {
         }
     }
 
-    pub(self) fn tick_cb(&self, sm: &data::TimerStateMachine) {
+    pub(self) fn tick_cb(&self, sm: &data::SimpleTimerStateMachine) {
         let imp = self.imp();
         if let data::TimerState::Timing { duration } = sm.state() {
             imp.time_label.set_duration(duration);
