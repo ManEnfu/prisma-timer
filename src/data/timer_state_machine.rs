@@ -2,10 +2,10 @@ use std::mem;
 use std::time::Duration;
 use std::time::Instant;
 
-use crate::data::{Penalty, SolveTime, TimerState, TimerStatePriv};
-use adw::subclass::prelude::*;
+use crate::data::{Penalty, SolveTime, StateMachine, TimerState, TimerStatePriv};
+use crate::prelude::*;
+use crate::subclass::prelude::*;
 use gtk::glib;
-use gtk::prelude::*;
 
 const WAIT_TIMEOUT: u64 = 500;
 const TICK_INTERVAL: u64 = 10;
@@ -31,6 +31,7 @@ mod imp {
     impl ObjectSubclass for TimerStateMachine {
         const NAME: &'static str = "PtTimerStateMachine";
         type Type = super::TimerStateMachine;
+        type Interfaces = (StateMachine,);
     }
 
     impl ObjectImpl for TimerStateMachine {
@@ -48,11 +49,30 @@ mod imp {
             SIGNALS.as_ref()
         }
     }
+
+    impl StateMachineImpl for TimerStateMachine {
+        fn press(&self) {
+            self.obj().press_cb();
+        }
+
+        fn release(&self) {
+            self.obj().release_cb();
+        }
+
+        fn press_timeout(&self) {
+            self.obj().press_timeout_cb();
+        }
+
+        fn tick(&self) {
+            self.obj().tick_cb();
+        }
+    }
 }
 
 glib::wrapper! {
     /// The state machine of a timer.
-    pub struct TimerStateMachine(ObjectSubclass<imp::TimerStateMachine>);
+    pub struct TimerStateMachine(ObjectSubclass<imp::TimerStateMachine>)
+        @implements StateMachine;
 }
 
 impl TimerStateMachine {
@@ -74,7 +94,7 @@ impl TimerStateMachine {
     }
 
     /// Called when timer trigger is pressed.
-    pub(crate) fn press(&self) {
+    pub(crate) fn press_cb(&self) {
         let imp = self.imp();
         let mut state_changed = true;
 
@@ -126,7 +146,7 @@ impl TimerStateMachine {
     }
 
     /// Called when timer trigger is released.
-    pub(crate) fn release(&self) {
+    pub(crate) fn release_cb(&self) {
         let imp = self.imp();
         let mut state_changed = true;
 
@@ -173,7 +193,7 @@ impl TimerStateMachine {
     }
 
     /// Called when duration of a trigger press exceeds certain threshold.
-    pub(crate) fn press_timeout(&self) {
+    pub(crate) fn press_timeout_cb(&self) {
         let imp = self.imp();
         let mut state_changed = true;
 
@@ -204,7 +224,7 @@ impl TimerStateMachine {
     }
 
     /// Called on every tick during `Timing` state.
-    pub(crate) fn tick(&self) {
+    pub(crate) fn tick_cb(&self) {
         let imp = self.imp();
 
         {

@@ -13,6 +13,18 @@ use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use gtk::prelude::*;
 use gtk::{gio, glib};
 
+mod prelude {
+    pub use crate::data::StateMachineExt;
+    pub use adw::prelude::*;
+}
+
+mod subclass {
+    pub mod prelude {
+        pub use crate::data::StateMachineImpl;
+        pub use adw::subclass::prelude::*;
+    }
+}
+
 fn main() -> glib::ExitCode {
     env_logger::init();
 

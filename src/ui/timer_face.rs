@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use crate::data::{self, TimerState};
+use crate::prelude::*;
+use crate::subclass::prelude::*;
 use crate::ui;
-use adw::subclass::prelude::*;
-use gtk::prelude::*;
 use gtk::{gdk, glib};
 
 #[doc(hidden)]
