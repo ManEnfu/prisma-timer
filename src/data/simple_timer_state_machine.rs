@@ -12,6 +12,12 @@ const TICK_INTERVAL: u64 = 10;
 
 const EXPECT_RWLOCK: &str = "Error accessing timer state.";
 
+mod finished;
+mod idle;
+mod ready;
+mod timing;
+mod wait;
+
 #[doc(hidden)]
 mod imp {
     use std::sync::RwLock;

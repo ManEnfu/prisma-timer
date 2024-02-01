@@ -56,3 +56,48 @@ pub enum TimerState {
     /// The timer has finished timing.
     Finished { solve_time: SolveTime },
 }
+
+pub trait IsTimerState
+where
+    Self: 'static,
+{
+    fn press(self: Box<Self>) -> Box<dyn IsTimerState>
+    where
+        Self: Sized,
+    {
+        log::warn!("transition `press` is not defined in this state.");
+        self
+    }
+
+    fn release(self: Box<Self>) -> Box<dyn IsTimerState>
+    where
+        Self: Sized,
+    {
+        log::warn!("transition `release` is not defined in this state.");
+        self
+    }
+
+    fn press_timeout(self: Box<Self>) -> Box<dyn IsTimerState>
+    where
+        Self: Sized,
+    {
+        log::warn!("transition `press_timeout` is not defined in this state.");
+        self
+    }
+
+    fn tick(self: Box<Self>) -> Box<dyn IsTimerState>
+    where
+        Self: Sized,
+    {
+        log::warn!("transition `tick` is not defined in this state.");
+        self
+    }
+
+    fn is_finished(&self) -> bool {
+        false
+    }
+
+    fn is_running(&self) -> bool {
+        false
+    }
+}

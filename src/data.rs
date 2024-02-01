@@ -5,8 +5,8 @@ pub use simple_timer_state_machine::SimpleTimerStateMachine;
 pub use solve_data::SolveData;
 pub use solve_time::SolveTime;
 pub use statistics::SolveStatistic;
-pub use timer_state::TimerState;
 pub(crate) use timer_state::TimerStatePriv;
+pub use timer_state::{IsTimerState, TimerState};
 pub use timer_state_machine::{TimerStateMachine, TimerStateMachineExt, TimerStateMachineImpl};
 
 mod penalty;
