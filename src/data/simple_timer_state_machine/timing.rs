@@ -1,13 +1,16 @@
 use std::time::{Duration, Instant};
 
 use crate::{
-    data::{Penalty, SolveTime},
+    data::{
+        IsTimerState, Penalty, SolveTime, TimerContent, TimerContentColor, TimerContentValue,
+        TimerStateMachine,
+    },
     prelude::*,
 };
+
 use gtk::glib;
 
 use super::finished::Finished;
-use crate::data::{IsTimerState, TimerStateMachine};
 
 const TICK_INTERVAL: u64 = 10;
 
@@ -79,5 +82,15 @@ impl IsTimerState for Timing {
 
     fn is_running(&self) -> bool {
         true
+    }
+
+    fn content(&self) -> TimerContent {
+        TimerContent {
+            value: Some(TimerContentValue::SolveTime(SolveTime::new(
+                self.duration,
+                Penalty::Ok,
+            ))),
+            color: TimerContentColor::Neutral,
+        }
     }
 }

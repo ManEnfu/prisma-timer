@@ -1,8 +1,14 @@
-use crate::{data::SolveTime, prelude::*};
 use gtk::glib;
 
+use crate::{
+    data::{
+        IsTimerState, SolveTime, TimerContent, TimerContentColor, TimerContentValue,
+        TimerStateMachine,
+    },
+    prelude::*,
+};
+
 use super::idle::Idle;
-use crate::data::{IsTimerState, TimerStateMachine};
 
 pub struct Finished {
     state_machine: glib::WeakRef<TimerStateMachine>,
@@ -30,5 +36,12 @@ impl IsTimerState for Finished {
 
     fn is_finished(&self) -> bool {
         true
+    }
+
+    fn content(&self) -> TimerContent {
+        TimerContent {
+            value: Some(TimerContentValue::SolveTime(self.solve_time)),
+            color: TimerContentColor::Success,
+        }
     }
 }

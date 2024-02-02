@@ -1,9 +1,11 @@
 use std::time::Duration;
 
-use crate::prelude::*;
 use gtk::glib;
 
-use crate::data::{IsTimerState, TimerStateMachine};
+use crate::{
+    data::{IsTimerState, TimerContent, TimerContentColor, TimerStateMachine},
+    prelude::*,
+};
 
 use super::{idle::Idle, ready::Ready};
 
@@ -52,5 +54,12 @@ impl IsTimerState for Wait {
 
     fn press_timeout(self: Box<Self>) -> Box<dyn IsTimerState> {
         Box::new(Ready::new(self.state_machine.upgrade().as_ref()))
+    }
+
+    fn content(&self) -> TimerContent {
+        TimerContent {
+            value: None,
+            color: TimerContentColor::Destructive,
+        }
     }
 }

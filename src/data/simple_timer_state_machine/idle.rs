@@ -1,8 +1,11 @@
-use crate::prelude::*;
 use gtk::glib;
 
+use crate::{
+    data::{IsTimerState, TimerContent, TimerContentColor, TimerStateMachine},
+    prelude::*,
+};
+
 use super::wait::Wait;
-use crate::data::{IsTimerState, TimerStateMachine};
 
 pub struct Idle {
     state_machine: glib::WeakRef<TimerStateMachine>,
@@ -24,5 +27,12 @@ impl Idle {
 impl IsTimerState for Idle {
     fn press(self: Box<Self>) -> Box<dyn IsTimerState> {
         Box::new(Wait::new(self.state_machine.upgrade().as_ref()))
+    }
+
+    fn content(&self) -> TimerContent {
+        TimerContent {
+            value: None,
+            color: TimerContentColor::Neutral,
+        }
     }
 }

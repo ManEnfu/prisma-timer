@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use gtk::glib;
 
-use super::SolveTime;
+use super::{SolveTime, TimerContent};
 
 /// The internal representation of the state of a timer.
 #[derive(Debug, Default)]
@@ -99,5 +99,9 @@ where
 
     fn is_running(&self) -> bool {
         false
+    }
+
+    fn content(&self) -> TimerContent {
+        TimerContent::default()
     }
 }

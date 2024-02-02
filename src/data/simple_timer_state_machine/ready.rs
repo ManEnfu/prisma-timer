@@ -1,8 +1,11 @@
-use crate::prelude::*;
 use gtk::glib;
 
+use crate::{
+    data::{IsTimerState, TimerContent, TimerContentColor, TimerStateMachine},
+    prelude::*,
+};
+
 use super::timing::Timing;
-use crate::data::{IsTimerState, TimerStateMachine};
 
 pub struct Ready {
     state_machine: glib::WeakRef<TimerStateMachine>,
@@ -28,5 +31,12 @@ impl IsTimerState for Ready {
 
     fn is_running(&self) -> bool {
         true
+    }
+
+    fn content(&self) -> TimerContent {
+        TimerContent {
+            value: None,
+            color: TimerContentColor::Success,
+        }
     }
 }
