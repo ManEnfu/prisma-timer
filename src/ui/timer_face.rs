@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::data::{self, TimerState};
+use crate::data;
 use crate::prelude::*;
 use crate::subclass::prelude::*;
 use crate::ui;
@@ -63,13 +63,6 @@ mod imp {
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
                         obj.timer_state_changed_cb(sm);
-                    }),
-                ));
-                handlers.push(sm.connect_closure(
-                    "tick",
-                    false,
-                    glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
-                        obj.tick_cb(sm);
                     }),
                 ));
             }
@@ -230,13 +223,6 @@ impl TimerFace {
         }
     }
 
-    pub(self) fn tick_cb(&self, sm: &data::SimpleTimerStateMachine) {
-        let imp = self.imp();
-        if let data::TimerState::Timing { duration } = sm.state() {
-            imp.time_label.set_duration(duration);
-        }
-    }
-
     fn set_content(&self, content: &data::TimerContent) {
         if let Some(ref value) = content.value {
             self.set_content_value(value);
@@ -284,21 +270,6 @@ impl TimerFace {
     fn last_solve_time_changed_cb(&self, solve: &data::SessionItem) {
         let imp = self.imp();
         imp.time_label.set_solve_time(solve.time());
-    }
-
-    fn set_color_normal(&self) {
-        self.remove_css_class("wait");
-        self.remove_css_class("ready");
-    }
-
-    fn set_color_wait(&self) {
-        self.remove_css_class("ready");
-        self.add_css_class("wait");
-    }
-
-    fn set_color_ready(&self) {
-        self.remove_css_class("wait");
-        self.add_css_class("ready");
     }
 
     #[template_callback]

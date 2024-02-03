@@ -1,4 +1,3 @@
-use crate::data::TimerState;
 use crate::{data, ui};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;

@@ -40,14 +40,9 @@ mod imp {
 
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![
-                    Signal::builder("state-changed")
-                        .param_types(Vec::<SignalType>::new())
-                        .build(),
-                    Signal::builder("tick")
-                        .param_types(Vec::<SignalType>::new())
-                        .build(),
-                ]
+                vec![Signal::builder("state-changed")
+                    .param_types(Vec::<SignalType>::new())
+                    .build()]
             });
 
             SIGNALS.as_ref()
