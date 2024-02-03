@@ -254,6 +254,41 @@ impl TimerFace {
         }
     }
 
+    fn set_content(&self, content: &data::TimerContent) {
+        if let Some(ref value) = content.value {
+            self.set_content_value(value);
+        }
+        self.set_content_color(content.color);
+    }
+
+    fn set_content_value(&self, value: &data::TimerContentValue) {
+        let imp = self.imp();
+        match value {
+            data::TimerContentValue::SolveTime(solve_time) => {
+                imp.time_label.set_solve_time(*solve_time)
+            }
+            data::TimerContentValue::Int(_) => todo!(),
+            data::TimerContentValue::String(_) => todo!(),
+        }
+    }
+
+    fn set_content_color(&self, color: data::TimerContentColor) {
+        match color {
+            data::TimerContentColor::Neutral => {
+                self.remove_css_class("wait");
+                self.remove_css_class("ready");
+            }
+            data::TimerContentColor::Destructive => {
+                self.remove_css_class("ready");
+                self.add_css_class("wait");
+            }
+            data::TimerContentColor::Success => {
+                self.remove_css_class("wait");
+                self.add_css_class("ready");
+            }
+        }
+    }
+
     fn submit_solve(&self, solve: data::SolveData) {
         let imp = self.imp();
         if let Some(session) = self.session() {
