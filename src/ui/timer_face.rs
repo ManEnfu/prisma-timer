@@ -62,7 +62,7 @@ mod imp {
                     "state-changed",
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
-                        obj.timer_state_changed_cb(sm.state());
+                        obj.timer_state_changed_cb(sm);
                     }),
                 ));
                 handlers.push(sm.connect_closure(
@@ -211,38 +211,21 @@ impl TimerFace {
 
     fn setup_callbacks(&self) {}
 
-    pub(self) fn timer_state_changed_cb(&self, state: TimerState) {
+    pub(self) fn timer_state_changed_cb(&self, sm: &data::SimpleTimerStateMachine) {
         let imp = self.imp();
 
-        match state {
-            TimerState::Idle => {
-                self.set_color_normal();
-                imp.statistics_box.set_visible(true);
-                imp.penalty_selector.set_visible(true);
-            }
-            TimerState::Wait => {
-                self.set_color_wait();
-                imp.statistics_box.set_visible(true);
-                imp.penalty_selector.set_visible(true);
-            }
-            TimerState::Ready => {
-                self.set_color_ready();
-                imp.time_label.set_duration(Duration::ZERO);
-                imp.statistics_box.set_visible(false);
-                imp.penalty_selector.set_visible(false);
-            }
-            TimerState::Timing { duration } => {
-                self.set_color_normal();
-                imp.time_label.set_duration(duration);
-                imp.statistics_box.set_visible(false);
-                imp.penalty_selector.set_visible(false);
-            }
-            TimerState::Finished { solve_time, .. } => {
-                self.set_color_wait();
-                imp.time_label.set_solve_time(solve_time);
-                imp.statistics_box.set_visible(true);
-                imp.penalty_selector.set_visible(true);
-                self.submit_solve(data::SolveData::new(solve_time, "".to_string()));
+        let is_running = sm.running();
+        let is_finished = sm.finished();
+        let content = sm.content();
+
+        imp.statistics_box.set_visible(!is_running);
+        imp.penalty_selector.set_visible(!is_running);
+
+        self.set_content(&content);
+
+        if is_finished {
+            if let Some(data::TimerContentValue::SolveTime(st)) = content.value {
+                self.submit_solve(data::SolveData::new(st, "".to_string()));
             }
         }
     }

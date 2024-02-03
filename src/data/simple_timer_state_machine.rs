@@ -22,7 +22,11 @@ mod wait;
 
 #[doc(hidden)]
 mod imp {
-    use std::{cell::RefCell, marker::PhantomData, sync::RwLock};
+    use std::{
+        cell::{Cell, RefCell},
+        marker::PhantomData,
+        sync::RwLock,
+    };
 
     use super::{idle::Idle, *};
 
@@ -32,6 +36,7 @@ mod imp {
         pub(super) state: RwLock<TimerStatePriv>,
         pub(super) last_solve: RwLock<SolveTime>,
         pub(super) state_: RefCell<Option<Box<dyn IsTimerState>>>,
+        pub(super) is_pressed: Cell<bool>,
 
         #[property(get = Self::is_finished, override_interface = TimerStateMachine)]
         finished: PhantomData<bool>,
@@ -55,6 +60,14 @@ mod imp {
                 .map(|s| s.is_running())
                 .unwrap_or_default()
         }
+
+        fn switch_state(&self, state: Option<Box<dyn IsTimerState>>) {
+            let obj = self.obj();
+            self.state_.replace(state);
+            obj.emit_by_name::<()>("state-changed", &[]);
+            obj.notify_running();
+            obj.notify_finished();
+        }
     }
 
     #[glib::object_subclass]
@@ -77,19 +90,39 @@ mod imp {
 
     impl TimerStateMachineImpl for SimpleTimerStateMachine {
         fn press(&self) {
-            self.obj().press_cb();
+            if !self.is_pressed.get() {
+                self.is_pressed.set(true);
+
+                if let Some(state) = self.state_.take() {
+                    let new_state = state.press();
+                    self.switch_state(Some(new_state));
+                }
+            }
         }
 
         fn release(&self) {
-            self.obj().release_cb();
+            if self.is_pressed.get() {
+                self.is_pressed.set(false);
+
+                if let Some(state) = self.state_.take() {
+                    let new_state = state.release();
+                    self.switch_state(Some(new_state));
+                }
+            }
         }
 
         fn press_timeout(&self) {
-            self.obj().press_timeout_cb();
+            if let Some(state) = self.state_.take() {
+                let new_state = state.press_timeout();
+                self.switch_state(Some(new_state));
+            }
         }
 
         fn tick(&self) {
-            self.obj().tick_cb();
+            if let Some(state) = self.state_.take() {
+                let new_state = state.tick();
+                self.switch_state(Some(new_state));
+            }
         }
 
         fn content(&self) -> TimerContent {

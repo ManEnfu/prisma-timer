@@ -69,7 +69,7 @@ mod imp {
                     "state-changed",
                     false,
                     glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
-                        obj.timer_state_changed_cb(sm.state());
+                        obj.timer_state_changed_cb(sm);
                     }),
                 ));
             }
@@ -209,19 +209,16 @@ impl PrismaTimerWindow {
         imp.list_view.set_factory(Some(&factory));
     }
 
-    fn timer_state_changed_cb(&self, state: TimerState) {
+    fn timer_state_changed_cb(&self, sm: &data::SimpleTimerStateMachine) {
         let imp = self.imp();
 
-        match state {
-            TimerState::Ready | TimerState::Timing { .. } => {
-                if imp.split_view.is_collapsed() {
-                    imp.split_view.set_show_sidebar(false);
-                }
-                self.set_focus_mode(true);
+        if sm.running() {
+            if imp.split_view.is_collapsed() {
+                imp.split_view.set_show_sidebar(false);
             }
-            _ => {
-                self.set_focus_mode(false);
-            }
+            self.set_focus_mode(true);
+        } else {
+            self.set_focus_mode(false);
         }
     }
 
