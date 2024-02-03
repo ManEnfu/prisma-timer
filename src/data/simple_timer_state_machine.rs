@@ -2,7 +2,9 @@ use std::mem;
 use std::time::Duration;
 use std::time::Instant;
 
-use crate::data::{Penalty, SolveTime, TimerState, TimerStateMachine, TimerStatePriv};
+use crate::data::{
+    IsTimerState, Penalty, SolveTime, TimerContent, TimerState, TimerStateMachine, TimerStatePriv,
+};
 use crate::prelude::*;
 use crate::subclass::prelude::*;
 use gtk::glib;
@@ -20,17 +22,18 @@ mod wait;
 
 #[doc(hidden)]
 mod imp {
-    use std::sync::RwLock;
+    use std::{cell::RefCell, sync::RwLock};
 
     use gtk::glib::subclass::{Signal, SignalType};
     use once_cell::sync::Lazy;
 
-    use super::*;
+    use super::{idle::Idle, *};
 
-    #[derive(Debug, Default)]
+    #[derive(Default)]
     pub struct SimpleTimerStateMachine {
         pub(super) state: RwLock<TimerStatePriv>,
         pub(super) last_solve: RwLock<SolveTime>,
+        pub(super) state_: RefCell<Option<Box<dyn IsTimerState>>>,
     }
 
     #[glib::object_subclass]
@@ -41,6 +44,14 @@ mod imp {
     }
 
     impl ObjectImpl for SimpleTimerStateMachine {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            let obj = self.obj();
+            self.state_
+                .replace(Some(Box::new(Idle::new(Some(obj.as_ref())))));
+        }
+
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![
@@ -71,6 +82,30 @@ mod imp {
 
         fn tick(&self) {
             self.obj().tick_cb();
+        }
+
+        fn is_finished(&self) -> bool {
+            self.state_
+                .borrow()
+                .as_ref()
+                .map(|s| s.is_finished())
+                .unwrap_or_default()
+        }
+
+        fn is_running(&self) -> bool {
+            self.state_
+                .borrow()
+                .as_ref()
+                .map(|s| s.is_running())
+                .unwrap_or_default()
+        }
+
+        fn content(&self) -> TimerContent {
+            self.state_
+                .borrow()
+                .as_ref()
+                .map(|s| s.content())
+                .unwrap_or_default()
         }
     }
 }
@@ -110,7 +145,7 @@ impl SimpleTimerStateMachine {
 
             let n_state = match o_state {
                 TimerStatePriv::Idle => {
-                    let timeout = glib::timeout_add_once(
+                    let timeout = glib::timeout_add_local_once(
                         Duration::from_millis(WAIT_TIMEOUT),
                         glib::clone!(@weak self as obj => move || {
                             obj.press_timeout();
@@ -166,7 +201,7 @@ impl SimpleTimerStateMachine {
                     TimerStatePriv::Idle
                 }
                 TimerStatePriv::Ready => {
-                    let tick_cb = glib::timeout_add(
+                    let tick_cb = glib::timeout_add_local(
                         Duration::from_millis(TICK_INTERVAL),
                         glib::clone!(@strong self as obj => move || {
                             obj.tick();

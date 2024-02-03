@@ -48,6 +48,10 @@ impl Drop for Wait {
 }
 
 impl IsTimerState for Wait {
+    fn noop(self: Box<Self>) -> Box<dyn IsTimerState> {
+        self
+    }
+
     fn release(self: Box<Self>) -> Box<dyn IsTimerState> {
         Box::new(Idle::new(self.state_machine.upgrade().as_ref()))
     }

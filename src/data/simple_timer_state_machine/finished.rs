@@ -30,6 +30,10 @@ impl Finished {
 }
 
 impl IsTimerState for Finished {
+    fn noop(self: Box<Self>) -> Box<dyn IsTimerState> {
+        self
+    }
+
     fn release(self: Box<Self>) -> Box<dyn IsTimerState> {
         Box::new(Idle::new(self.state_machine.upgrade().as_ref()))
     }

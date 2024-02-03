@@ -58,6 +58,10 @@ impl Drop for Timing {
 }
 
 impl IsTimerState for Timing {
+    fn noop(self: Box<Self>) -> Box<dyn IsTimerState> {
+        self
+    }
+
     fn press(self: Box<Self>) -> Box<dyn IsTimerState> {
         let solve_time = SolveTime::new(
             self.duration + (Instant::now() - self.last_tick),

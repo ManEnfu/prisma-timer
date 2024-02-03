@@ -61,36 +61,27 @@ pub trait IsTimerState
 where
     Self: 'static,
 {
-    fn press(self: Box<Self>) -> Box<dyn IsTimerState>
-    where
-        Self: Sized,
-    {
+    /// No-operation. This is a workaround to make `IsTimerState` object safe.
+    fn noop(self: Box<Self>) -> Box<dyn IsTimerState>;
+
+    fn press(self: Box<Self>) -> Box<dyn IsTimerState> {
         log::warn!("transition `press` is not defined in this state.");
-        self
+        self.noop()
     }
 
-    fn release(self: Box<Self>) -> Box<dyn IsTimerState>
-    where
-        Self: Sized,
-    {
+    fn release(self: Box<Self>) -> Box<dyn IsTimerState> {
         log::warn!("transition `release` is not defined in this state.");
-        self
+        self.noop()
     }
 
-    fn press_timeout(self: Box<Self>) -> Box<dyn IsTimerState>
-    where
-        Self: Sized,
-    {
+    fn press_timeout(self: Box<Self>) -> Box<dyn IsTimerState> {
         log::warn!("transition `press_timeout` is not defined in this state.");
-        self
+        self.noop()
     }
 
-    fn tick(self: Box<Self>) -> Box<dyn IsTimerState>
-    where
-        Self: Sized,
-    {
+    fn tick(self: Box<Self>) -> Box<dyn IsTimerState> {
         log::warn!("transition `tick` is not defined in this state.");
-        self
+        self.noop()
     }
 
     fn is_finished(&self) -> bool {

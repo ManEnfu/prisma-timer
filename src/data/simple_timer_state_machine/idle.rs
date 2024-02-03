@@ -25,6 +25,10 @@ impl Idle {
 }
 
 impl IsTimerState for Idle {
+    fn noop(self: Box<Self>) -> Box<dyn IsTimerState> {
+        self
+    }
+
     fn press(self: Box<Self>) -> Box<dyn IsTimerState> {
         Box::new(Wait::new(self.state_machine.upgrade().as_ref()))
     }
