@@ -5,18 +5,20 @@ use gtk::glib;
 
 #[doc(hidden)]
 mod imp {
+    use gtk::glib::subclass::{Signal, SignalType};
+    use once_cell::sync::Lazy;
+
     use super::*;
 
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct TimerStateMachineInterface {
         pub type_iface: glib::gobject_ffi::GTypeInterface,
+
         pub press: fn(&super::TimerStateMachine),
         pub release: fn(&super::TimerStateMachine),
         pub press_timeout: fn(&super::TimerStateMachine),
         pub tick: fn(&super::TimerStateMachine),
-        pub is_finished: fn(&super::TimerStateMachine) -> bool,
-        pub is_running: fn(&super::TimerStateMachine) -> bool,
         pub content: fn(&super::TimerStateMachine) -> TimerContent,
     }
 
@@ -24,6 +26,32 @@ mod imp {
     unsafe impl ObjectInterface for TimerStateMachineInterface {
         const NAME: &'static str = "PtTimerStateMachine";
         type Prerequisites = ();
+
+        fn properties() -> &'static [glib::ParamSpec] {
+            static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+                vec![
+                    glib::ParamSpecBoolean::builder("finished").build(),
+                    glib::ParamSpecBoolean::builder("running").build(),
+                ]
+            });
+
+            PROPERTIES.as_ref()
+        }
+
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                vec![
+                    Signal::builder("state-changed")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                    Signal::builder("tick")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                ]
+            });
+
+            SIGNALS.as_ref()
+        }
     }
 }
 
@@ -38,8 +66,6 @@ pub trait TimerStateMachineExt: 'static {
     fn release(&self);
     fn press_timeout(&self);
     fn tick(&self);
-    fn is_finished(&self) -> bool;
-    fn is_running(&self) -> bool;
     fn content(&self) -> TimerContent;
 }
 
@@ -64,16 +90,6 @@ impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
         (iface.as_ref().tick)(self.upcast_ref())
     }
 
-    fn is_finished(&self) -> bool {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
-        (iface.as_ref().is_finished)(self.upcast_ref())
-    }
-
-    fn is_running(&self) -> bool {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
-        (iface.as_ref().is_running)(self.upcast_ref())
-    }
-
     fn content(&self) -> TimerContent {
         let iface = self.interface::<TimerStateMachine>().unwrap();
         (iface.as_ref().content)(self.upcast_ref())
@@ -86,8 +102,6 @@ pub trait TimerStateMachineImpl: ObjectImpl {
     fn release(&self);
     fn press_timeout(&self);
     fn tick(&self);
-    fn is_finished(&self) -> bool;
-    fn is_running(&self) -> bool;
     fn content(&self) -> TimerContent;
 }
 
@@ -103,8 +117,6 @@ where
         iface.release = state_machine_release_trampoline::<T>;
         iface.press_timeout = state_machine_press_timeout_trampoline::<T>;
         iface.tick = state_machine_tick_trampoline::<T>;
-        iface.is_finished = state_machine_is_finished_trampoline::<T>;
-        iface.is_running = state_machine_is_running_trampoline::<T>;
         iface.content = state_machine_content_trampoline::<T>;
     }
 }
@@ -155,30 +167,6 @@ where
         .unwrap()
         .imp()
         .tick();
-}
-
-fn state_machine_is_finished_trampoline<T>(state_machine: &TimerStateMachine) -> bool
-where
-    T: TimerStateMachineImpl,
-    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
-{
-    state_machine
-        .downcast_ref::<T::Type>()
-        .unwrap()
-        .imp()
-        .is_finished()
-}
-
-fn state_machine_is_running_trampoline<T>(state_machine: &TimerStateMachine) -> bool
-where
-    T: TimerStateMachineImpl,
-    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
-{
-    state_machine
-        .downcast_ref::<T::Type>()
-        .unwrap()
-        .imp()
-        .is_running()
 }
 
 fn state_machine_content_trampoline<T>(state_machine: &TimerStateMachine) -> TimerContent

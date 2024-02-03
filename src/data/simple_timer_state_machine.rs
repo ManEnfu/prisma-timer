@@ -22,18 +22,39 @@ mod wait;
 
 #[doc(hidden)]
 mod imp {
-    use std::{cell::RefCell, sync::RwLock};
-
-    use gtk::glib::subclass::{Signal, SignalType};
-    use once_cell::sync::Lazy;
+    use std::{cell::RefCell, marker::PhantomData, sync::RwLock};
 
     use super::{idle::Idle, *};
 
-    #[derive(Default)]
+    #[derive(Default, glib::Properties)]
+    #[properties(wrapper_type = super::SimpleTimerStateMachine)]
     pub struct SimpleTimerStateMachine {
         pub(super) state: RwLock<TimerStatePriv>,
         pub(super) last_solve: RwLock<SolveTime>,
         pub(super) state_: RefCell<Option<Box<dyn IsTimerState>>>,
+
+        #[property(get = Self::is_finished, override_interface = TimerStateMachine)]
+        finished: PhantomData<bool>,
+        #[property(get = Self::is_running, override_interface = TimerStateMachine)]
+        running: PhantomData<bool>,
+    }
+
+    impl SimpleTimerStateMachine {
+        fn is_finished(&self) -> bool {
+            self.state_
+                .borrow()
+                .as_ref()
+                .map(|s| s.is_finished())
+                .unwrap_or_default()
+        }
+
+        fn is_running(&self) -> bool {
+            self.state_
+                .borrow()
+                .as_ref()
+                .map(|s| s.is_running())
+                .unwrap_or_default()
+        }
     }
 
     #[glib::object_subclass]
@@ -43,6 +64,7 @@ mod imp {
         type Interfaces = (TimerStateMachine,);
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for SimpleTimerStateMachine {
         fn constructed(&self) {
             self.parent_constructed();
@@ -50,20 +72,6 @@ mod imp {
             let obj = self.obj();
             self.state_
                 .replace(Some(Box::new(Idle::new(Some(obj.as_ref())))));
-        }
-
-        fn signals() -> &'static [Signal] {
-            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![
-                    Signal::builder("state-changed")
-                        .param_types(Vec::<SignalType>::new())
-                        .build(),
-                    Signal::builder("tick")
-                        .param_types(Vec::<SignalType>::new())
-                        .build(),
-                ]
-            });
-            SIGNALS.as_ref()
         }
     }
 
@@ -82,22 +90,6 @@ mod imp {
 
         fn tick(&self) {
             self.obj().tick_cb();
-        }
-
-        fn is_finished(&self) -> bool {
-            self.state_
-                .borrow()
-                .as_ref()
-                .map(|s| s.is_finished())
-                .unwrap_or_default()
-        }
-
-        fn is_running(&self) -> bool {
-            self.state_
-                .borrow()
-                .as_ref()
-                .map(|s| s.is_running())
-                .unwrap_or_default()
         }
 
         fn content(&self) -> TimerContent {
