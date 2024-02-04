@@ -35,7 +35,7 @@ mod imp {
         pub last_ao12_label: TemplateChild<gtk::Label>,
 
         #[property(get, set = Self::set_timer_state_machine)]
-        pub timer_state_machine: RefCell<Option<data::SimpleTimerStateMachine>>,
+        pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
 
         #[property(get, set)]
@@ -47,7 +47,7 @@ mod imp {
     }
 
     impl TimerFace {
-        fn set_timer_state_machine(&self, v: Option<data::SimpleTimerStateMachine>) {
+        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
             let obj = self.obj();
             let mut handlers = self.timer_state_machine_handlers.borrow_mut();
 
@@ -61,7 +61,7 @@ mod imp {
                 handlers.push(sm.connect_closure(
                     "state-changed",
                     false,
-                    glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
+                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
                         obj.timer_state_changed_cb(sm);
                     }),
                 ));
@@ -204,11 +204,11 @@ impl TimerFace {
 
     fn setup_callbacks(&self) {}
 
-    pub(self) fn timer_state_changed_cb(&self, sm: &data::SimpleTimerStateMachine) {
+    pub(self) fn timer_state_changed_cb(&self, sm: &data::TimerStateMachine) {
         let imp = self.imp();
 
-        let is_running = sm.running();
-        let is_finished = sm.finished();
+        let is_running = sm.is_running();
+        let is_finished = sm.is_finished();
         let content = sm.content();
 
         imp.statistics_box.set_visible(!is_running);

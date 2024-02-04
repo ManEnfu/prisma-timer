@@ -59,15 +59,16 @@ impl SolveTime {
 
     pub fn eq_aprrox(&self, other: &Self, eps_millis: u128) -> bool {
         if other.is_dnf() {
-            self.is_dnf()
-        } else {
-            let eps = if self > other {
-                self - other
-            } else {
-                other - self
-            };
-            eps.recorded_time().unwrap().as_millis() <= eps_millis
+            return self.is_dnf();
         }
+        let eps = if self > other {
+            self - other
+        } else {
+            other - self
+        };
+        eps.recorded_time()
+            .map(|x| x.as_millis() <= eps_millis)
+            .unwrap_or_default()
     }
 }
 

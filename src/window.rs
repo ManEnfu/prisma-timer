@@ -1,6 +1,6 @@
+use crate::prelude::*;
+use crate::subclass::prelude::*;
 use crate::{data, ui};
-use adw::subclass::prelude::*;
-use gtk::prelude::*;
 use gtk::{gdk, gio, glib};
 
 #[doc(hidden)]
@@ -34,7 +34,7 @@ mod imp {
 
         /// The state machine is shared between widgets within this window.
         #[property(get, set = Self::set_timer_state_machine)]
-        pub timer_state_machine: RefCell<Option<data::SimpleTimerStateMachine>>,
+        pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
 
         #[property(get, set)]
@@ -53,7 +53,7 @@ mod imp {
     }
 
     impl PrismaTimerWindow {
-        fn set_timer_state_machine(&self, v: Option<data::SimpleTimerStateMachine>) {
+        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
             let obj = self.obj();
             let mut handlers = self.timer_state_machine_handlers.borrow_mut();
 
@@ -67,7 +67,7 @@ mod imp {
                 handlers.push(sm.connect_closure(
                     "state-changed",
                     false,
-                    glib::closure_local!(@strong obj => move |sm: &data::SimpleTimerStateMachine| {
+                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
                         obj.timer_state_changed_cb(sm);
                     }),
                 ));
@@ -208,10 +208,10 @@ impl PrismaTimerWindow {
         imp.list_view.set_factory(Some(&factory));
     }
 
-    fn timer_state_changed_cb(&self, sm: &data::SimpleTimerStateMachine) {
+    fn timer_state_changed_cb(&self, sm: &data::TimerStateMachine) {
         let imp = self.imp();
 
-        if sm.running() {
+        if sm.is_running() {
             if imp.split_view.is_collapsed() {
                 imp.split_view.set_show_sidebar(false);
             }
