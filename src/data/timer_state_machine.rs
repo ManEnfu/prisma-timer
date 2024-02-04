@@ -3,6 +3,8 @@ use crate::prelude::*;
 use crate::subclass::prelude::*;
 use gtk::glib;
 
+const EXPECT_IMPLEMENT: &str = "this class doesn't implement `PtTimerStateMachine`";
+
 #[doc(hidden)]
 mod imp {
     use gtk::glib::subclass::{Signal, SignalType};
@@ -25,7 +27,7 @@ mod imp {
     #[glib::object_interface]
     unsafe impl ObjectInterface for TimerStateMachineInterface {
         const NAME: &'static str = "PtTimerStateMachine";
-        type Prerequisites = ();
+        type Prerequisites = (glib::Object,);
 
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -61,32 +63,52 @@ pub trait TimerStateMachineExt: 'static {
     fn release(&self);
     fn press_timeout(&self);
     fn tick(&self);
+    fn is_finished(&self) -> bool;
+    fn is_running(&self) -> bool;
     fn content(&self) -> TimerContent;
 }
 
 impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
     fn press(&self) {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
+        let iface = self
+            .interface::<TimerStateMachine>()
+            .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().press)(self.upcast_ref())
     }
 
     fn release(&self) {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
+        let iface = self
+            .interface::<TimerStateMachine>()
+            .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().release)(self.upcast_ref())
     }
 
     fn press_timeout(&self) {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
+        let iface = self
+            .interface::<TimerStateMachine>()
+            .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().press_timeout)(self.upcast_ref())
     }
 
     fn tick(&self) {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
+        let iface = self
+            .interface::<TimerStateMachine>()
+            .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().tick)(self.upcast_ref())
     }
 
+    fn is_finished(&self) -> bool {
+        self.property("finished")
+    }
+
+    fn is_running(&self) -> bool {
+        self.property("running")
+    }
+
     fn content(&self) -> TimerContent {
-        let iface = self.interface::<TimerStateMachine>().unwrap();
+        let iface = self
+            .interface::<TimerStateMachine>()
+            .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().content)(self.upcast_ref())
     }
 }
@@ -123,7 +145,7 @@ where
 {
     state_machine
         .downcast_ref::<T::Type>()
-        .unwrap()
+        .expect(EXPECT_IMPLEMENT)
         .imp()
         .press();
 }
@@ -135,7 +157,7 @@ where
 {
     state_machine
         .downcast_ref::<T::Type>()
-        .unwrap()
+        .expect(EXPECT_IMPLEMENT)
         .imp()
         .release();
 }
@@ -147,7 +169,7 @@ where
 {
     state_machine
         .downcast_ref::<T::Type>()
-        .unwrap()
+        .expect(EXPECT_IMPLEMENT)
         .imp()
         .press_timeout();
 }
@@ -159,7 +181,7 @@ where
 {
     state_machine
         .downcast_ref::<T::Type>()
-        .unwrap()
+        .expect(EXPECT_IMPLEMENT)
         .imp()
         .tick();
 }
@@ -171,7 +193,7 @@ where
 {
     state_machine
         .downcast_ref::<T::Type>()
-        .unwrap()
+        .expect(EXPECT_IMPLEMENT)
         .imp()
         .content()
 }
