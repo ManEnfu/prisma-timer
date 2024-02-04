@@ -13,14 +13,14 @@ use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use gtk::prelude::*;
 use gtk::{gio, glib};
 
-mod prelude {
-    pub use crate::data::TimerStateMachineExt;
+pub mod prelude {
+    pub use crate::data::{SimpleTimerStateMachineExt, TimerStateMachineExt};
     pub use adw::prelude::*;
 }
 
-mod subclass {
+pub mod subclass {
     pub mod prelude {
-        pub use crate::data::TimerStateMachineImpl;
+        pub use crate::data::{SimpleTimerStateMachineImpl, TimerStateMachineImpl};
         pub use adw::subclass::prelude::*;
     }
 }

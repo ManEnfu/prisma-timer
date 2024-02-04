@@ -1,7 +1,9 @@
 pub use penalty::Penalty;
 pub use session::Session;
 pub use session_item::SessionItem;
-pub use simple_timer_state_machine::SimpleTimerStateMachine;
+pub use simple_timer_state_machine::{
+    SimpleTimerStateMachine, SimpleTimerStateMachineExt, SimpleTimerStateMachineImpl,
+};
 pub use solve_data::SolveData;
 pub use solve_time::SolveTime;
 pub use statistics::SolveStatistic;

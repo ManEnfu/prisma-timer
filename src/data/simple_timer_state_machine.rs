@@ -18,6 +18,14 @@ mod imp {
 
     use super::{idle::Idle, *};
 
+    pub struct SimpleTimerStateMachineClass {
+        pub parent_class: glib::object::ObjectClass,
+    }
+
+    unsafe impl ClassStruct for SimpleTimerStateMachineClass {
+        type Type = SimpleTimerStateMachine;
+    }
+
     #[derive(Default, glib::Properties)]
     #[properties(wrapper_type = super::SimpleTimerStateMachine)]
     pub struct SimpleTimerStateMachine {
@@ -61,6 +69,7 @@ mod imp {
         const NAME: &'static str = "PtSimpleTimerStateMachine";
         type Type = super::SimpleTimerStateMachine;
         type Interfaces = (TimerStateMachine,);
+        type Class = SimpleTimerStateMachineClass;
     }
 
     #[glib::derived_properties]
@@ -138,4 +147,17 @@ impl Default for SimpleTimerStateMachine {
     fn default() -> Self {
         Self::new()
     }
+}
+
+pub trait SimpleTimerStateMachineExt: 'static {}
+
+impl<O: IsA<SimpleTimerStateMachine>> SimpleTimerStateMachineExt for O {}
+
+pub trait SimpleTimerStateMachineImpl: ObjectImpl {}
+
+unsafe impl<T> IsSubclassable<T> for SimpleTimerStateMachine
+where
+    T: SimpleTimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<SimpleTimerStateMachine>,
+{
 }
