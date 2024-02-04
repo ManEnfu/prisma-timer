@@ -55,7 +55,7 @@ mod imp {
                 .unwrap_or_default()
         }
 
-        fn switch_state(&self, state: Option<Box<dyn IsTimerState>>) {
+        pub fn switch_state(&self, state: Option<Box<dyn IsTimerState>>) {
             let obj = self.obj();
             self.state_.replace(state);
             obj.emit_by_name::<()>("state-changed", &[]);
@@ -141,6 +141,10 @@ impl SimpleTimerStateMachine {
     pub fn new() -> Self {
         glib::Object::builder().build()
     }
+
+    pub fn set_state(&self, state: Option<Box<dyn IsTimerState>>) {
+        self.imp().switch_state(state);
+    }
 }
 
 impl Default for SimpleTimerStateMachine {
@@ -149,9 +153,15 @@ impl Default for SimpleTimerStateMachine {
     }
 }
 
-pub trait SimpleTimerStateMachineExt: 'static {}
+pub trait SimpleTimerStateMachineExt: 'static {
+    fn set_state(&self, state: Option<Box<dyn IsTimerState>>);
+}
 
-impl<O: IsA<SimpleTimerStateMachine>> SimpleTimerStateMachineExt for O {}
+impl<O: IsA<SimpleTimerStateMachine>> SimpleTimerStateMachineExt for O {
+    fn set_state(&self, state: Option<Box<dyn IsTimerState>>) {
+        self.upcast_ref().set_state(state);
+    }
+}
 
 pub trait SimpleTimerStateMachineImpl: ObjectImpl {}
 
