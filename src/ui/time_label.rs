@@ -30,6 +30,8 @@ mod imp {
         pub centis: TemplateChild<gtk::Label>,
         #[template_child]
         pub dnf: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub str_label: TemplateChild<gtk::Label>,
     }
 
     #[glib::object_subclass]
@@ -102,6 +104,13 @@ impl TimeLabel {
             imp.seconds.set_label(&format!("{:0>1}", s));
         }
         imp.centis.set_label(&format!("{:0>2}", c));
+    }
+
+    pub fn set_str(&self, s: &str) {
+        let imp = self.imp();
+
+        imp.stack.set_visible_child_name("str-label");
+        imp.str_label.set_label(s);
     }
 }
 

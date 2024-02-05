@@ -236,8 +236,8 @@ impl TimerFace {
             data::TimerContentValue::SolveTime(solve_time) => {
                 imp.time_label.set_solve_time(*solve_time)
             }
-            data::TimerContentValue::Int(_) => todo!(),
-            data::TimerContentValue::String(_) => todo!(),
+            data::TimerContentValue::Int(i) => imp.time_label.set_str(&i.to_string()),
+            data::TimerContentValue::String(s) => imp.time_label.set_str(s),
         }
     }
 
