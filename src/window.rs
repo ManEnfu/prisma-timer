@@ -32,11 +32,6 @@ mod imp {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
 
-        /// The state machine is shared between widgets within this window.
-        #[property(get, set = Self::set_timer_state_machine)]
-        pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
-        timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
-
         #[property(get, set)]
         pub session: RefCell<Option<data::Session>>,
         #[property(get, set)]
@@ -47,33 +42,7 @@ mod imp {
         /// If set to true, this would hide most widgets aside from ones
         /// related to timing (i.e. sidebar).
         #[property(get, set)]
-        pub focus_mode: Cell<bool>,
-        #[property(get, set)]
         pub should_collapse: Cell<bool>,
-    }
-
-    impl PrismaTimerWindow {
-        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
-            let obj = self.obj();
-            let mut handlers = self.timer_state_machine_handlers.borrow_mut();
-
-            if let Some(osm) = self.timer_state_machine.take() {
-                for id in handlers.drain(..) {
-                    osm.disconnect(id);
-                }
-            }
-
-            if let Some(sm) = &v {
-                handlers.push(sm.connect_closure(
-                    "state-changed",
-                    false,
-                    glib::closure_local!(@strong obj => move |sm: &data::TimerStateMachine| {
-                        obj.timer_state_changed_cb(sm);
-                    }),
-                ));
-            }
-            self.timer_state_machine.replace(v);
-        }
     }
 
     #[glib::object_subclass]
@@ -106,11 +75,13 @@ mod imp {
             self.parent_constructed();
             let obj = self.obj();
 
-            obj.set_timer_state_machine(data::SimpleTimerStateMachine::new());
+            self.timer_face
+                .set_timer_state_machine(data::SimpleTimerStateMachine::new());
 
             obj.setup_gactions();
             obj.setup_event_controllers();
             obj.setup_list();
+            obj.setup_timer_face();
         }
     }
 
@@ -208,16 +179,24 @@ impl PrismaTimerWindow {
         imp.list_view.set_factory(Some(&factory));
     }
 
-    fn timer_state_changed_cb(&self, sm: &data::TimerStateMachine) {
+    fn setup_timer_face(&self) {
         let imp = self.imp();
 
-        if sm.is_running() {
+        imp.timer_face.connect_notify_local(
+            Some("elements-hidden"),
+            glib::clone!(@weak self as obj => move |tf, _| {
+                obj.timer_face_elements_hidden_changed_cb(tf);
+            }),
+        );
+    }
+
+    fn timer_face_elements_hidden_changed_cb(&self, tf: &ui::TimerFace) {
+        let imp = self.imp();
+
+        if tf.elements_hidden() {
             if imp.split_view.is_collapsed() {
                 imp.split_view.set_show_sidebar(false);
             }
-            self.set_focus_mode(true);
-        } else {
-            self.set_focus_mode(false);
         }
     }
 

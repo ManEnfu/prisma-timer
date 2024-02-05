@@ -8,7 +8,7 @@ use gtk::{gdk, glib};
 
 #[doc(hidden)]
 mod imp {
-    use std::cell::RefCell;
+    use std::{cell::RefCell, marker::PhantomData};
 
     use crate::util::TemplateCallbacks;
 
@@ -38,6 +38,9 @@ mod imp {
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
 
+        #[property(get = Self::is_elements_hidden)]
+        pub elements_hidden: PhantomData<bool>,
+
         #[property(get, set)]
         pub session: RefCell<Option<data::Session>>,
 
@@ -65,6 +68,12 @@ mod imp {
                         obj.timer_state_changed_cb(sm);
                     }),
                 ));
+                handlers.push(sm.connect_notify_local(
+                    Some("running"),
+                    glib::clone!(@weak obj => move |_, _| {
+                        obj.notify_elements_hidden()
+                    }),
+                ))
             }
             self.timer_state_machine.replace(v);
         }
@@ -88,6 +97,14 @@ mod imp {
                 ))
             }
             self.last_solve.replace(v);
+        }
+
+        fn is_elements_hidden(&self) -> bool {
+            self.timer_state_machine
+                .borrow()
+                .as_ref()
+                .map(|sm| sm.is_running())
+                .unwrap_or_default()
         }
     }
 

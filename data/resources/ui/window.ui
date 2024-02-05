@@ -27,7 +27,7 @@
             <binding name="collapsed">
               <closure type="gboolean" function="or_boolean">
                 <lookup name="should-collapse">PrismaTimerWindow</lookup>
-                <lookup name="focus-mode">PrismaTimerWindow</lookup>
+                <lookup name="elements-hidden">timer_face</lookup>
               </closure>
             </binding>
             <property name="sidebar">
@@ -108,7 +108,7 @@
                               <closure type="gboolean" function="and_boolean">
                                 <lookup name="should-collapse">PrismaTimerWindow</lookup>
                                 <closure type="gboolean" function="invert_boolean">
-                                  <lookup name="focus-mode">PrismaTimerWindow</lookup>
+                                  <lookup name="elements-hidden">timer_face</lookup>
                                 </closure>
                               </closure>
                             </binding>
@@ -121,8 +121,8 @@
                             <property name="tooltip-text" translatable="yes">Menu</property>
                             <property name="menu-model">primary_menu</property>
                             <property name="visible"
-                                      bind-source="PrismaTimerWindow"
-                                      bind-property="focus-mode"
+                                      bind-source="timer_face"
+                                      bind-property="elements-hidden"
                                       bind-flags="sync-create|invert-boolean"/>
                           </object>
                         </child>
@@ -130,10 +130,6 @@
                     </child>
                     <property name="content">
                       <object class="PtTimerFace" id="timer_face">
-                        <property name="timer-state-machine"
-                                  bind-source="PrismaTimerWindow"
-                                  bind-property="timer-state-machine"
-                                  bind-flags="sync-create"/>
                         <property name="session"
                                   bind-source="PrismaTimerWindow"
                                   bind-property="session"
