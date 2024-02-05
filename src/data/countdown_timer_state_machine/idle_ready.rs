@@ -5,7 +5,7 @@ use crate::{
     prelude::*,
 };
 
-use super::inspect::Inspect;
+use super::{idle::Idle, inspect::Inspect};
 
 pub struct IdleReady {
     state_machine: glib::WeakRef<TimerStateMachine>,
@@ -31,6 +31,10 @@ impl IsTimerState for IdleReady {
 
     fn release(self: Box<Self>) -> Box<dyn IsTimerState> {
         Box::new(Inspect::new(self.state_machine.upgrade().as_ref()))
+    }
+
+    fn cancel(self: Box<Self>) -> Box<dyn IsTimerState> {
+        Box::new(Idle::new(self.state_machine.upgrade().as_ref()))
     }
 
     fn content(&self) -> TimerContent {

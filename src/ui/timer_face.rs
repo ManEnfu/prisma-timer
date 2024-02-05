@@ -180,6 +180,9 @@ impl TimerFace {
         gestures.connect_released(glib::clone!(@weak self as obj => move |_, _, _, _| {
             obj.released_cb();
         }));
+        gestures.connect_cancel(glib::clone!(@weak self as obj => move |_, _| {
+            obj.cancel_cb();
+        }));
         self.add_controller(gestures);
     }
 
@@ -195,10 +198,16 @@ impl TimerFace {
         }
     }
 
+    fn cancel_cb(&self) {
+        if let Some(sm) = self.timer_state_machine() {
+            sm.cancel();
+        }
+    }
+
     #[template_callback]
     fn notify_has_focus_cb(&self, _pspec: &glib::ParamSpec, _s: &Self) {
         if !self.has_focus() {
-            self.released_cb();
+            self.cancel_cb();
         }
     }
 

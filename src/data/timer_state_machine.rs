@@ -19,6 +19,7 @@ mod imp {
 
         pub press: fn(&super::TimerStateMachine),
         pub release: fn(&super::TimerStateMachine),
+        pub cancel: fn(&super::TimerStateMachine),
         pub press_timeout: fn(&super::TimerStateMachine),
         pub tick: fn(&super::TimerStateMachine),
         pub content: fn(&super::TimerStateMachine) -> TimerContent,
@@ -61,6 +62,7 @@ glib::wrapper! {
 pub trait TimerStateMachineExt: 'static {
     fn press(&self);
     fn release(&self);
+    fn cancel(&self);
     fn press_timeout(&self);
     fn tick(&self);
     fn is_finished(&self) -> bool;
@@ -81,6 +83,13 @@ impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
             .interface::<TimerStateMachine>()
             .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().release)(self.upcast_ref())
+    }
+
+    fn cancel(&self) {
+        let iface = self
+            .interface::<TimerStateMachine>()
+            .expect(EXPECT_IMPLEMENT);
+        (iface.as_ref().cancel)(self.upcast_ref())
     }
 
     fn press_timeout(&self) {
@@ -117,6 +126,7 @@ impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
 pub trait TimerStateMachineImpl: ObjectImpl {
     fn press(&self);
     fn release(&self);
+    fn cancel(&self);
     fn press_timeout(&self);
     fn tick(&self);
     fn content(&self) -> TimerContent;
@@ -132,6 +142,7 @@ where
 
         iface.press = state_machine_press_trampoline::<T>;
         iface.release = state_machine_release_trampoline::<T>;
+        iface.cancel = state_machine_cancel_trampoline::<T>;
         iface.press_timeout = state_machine_press_timeout_trampoline::<T>;
         iface.tick = state_machine_tick_trampoline::<T>;
         iface.content = state_machine_content_trampoline::<T>;
@@ -160,6 +171,18 @@ where
         .expect(EXPECT_IMPLEMENT)
         .imp()
         .release();
+}
+
+fn state_machine_cancel_trampoline<T>(state_machine: &TimerStateMachine)
+where
+    T: TimerStateMachineImpl,
+    <T as ObjectSubclass>::Type: IsA<TimerStateMachine>,
+{
+    state_machine
+        .downcast_ref::<T::Type>()
+        .expect(EXPECT_IMPLEMENT)
+        .imp()
+        .cancel();
 }
 
 fn state_machine_press_timeout_trampoline<T>(state_machine: &TimerStateMachine)

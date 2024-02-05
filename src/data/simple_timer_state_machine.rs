@@ -106,6 +106,17 @@ mod imp {
             }
         }
 
+        fn cancel(&self) {
+            if self.is_pressed.get() {
+                self.is_pressed.set(false);
+
+                if let Some(state) = self.state_.take() {
+                    let new_state = state.cancel();
+                    self.switch_state(Some(new_state));
+                }
+            }
+        }
+
         fn press_timeout(&self) {
             if let Some(state) = self.state_.take() {
                 let new_state = state.press_timeout();

@@ -15,6 +15,10 @@ pub trait IsTimerState {
         self.noop()
     }
 
+    fn cancel(self: Box<Self>) -> Box<dyn IsTimerState> {
+        self.release()
+    }
+
     fn press_timeout(self: Box<Self>) -> Box<dyn IsTimerState> {
         log::warn!("transition `press_timeout` is not defined in this state.");
         self.noop()
