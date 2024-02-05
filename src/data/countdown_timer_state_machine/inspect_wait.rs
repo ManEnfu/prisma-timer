@@ -109,7 +109,7 @@ impl IsTimerState for InspectWait {
             } else {
                 "+2".to_string()
             })),
-            color: TimerContentColor::Destructive,
+            color: TimerContentColor::Warning,
         }
     }
 }

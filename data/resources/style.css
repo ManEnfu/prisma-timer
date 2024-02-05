@@ -18,6 +18,10 @@
   color: @success_color;
 }
 
+.timer-face.warning .time-label {
+  color: @warning_color;
+}
+
 .timer-face .statistics-label {
   font-size: 1em;
 }

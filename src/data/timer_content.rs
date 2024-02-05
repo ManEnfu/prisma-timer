@@ -29,5 +29,6 @@ pub enum TimerContentColor {
     #[default]
     Neutral,
     Destructive,
+    Warning,
     Success,
 }

@@ -62,7 +62,7 @@ impl IsTimerState for Dnf {
     fn content(&self) -> TimerContent {
         TimerContent {
             value: Some(TimerContentValue::SolveTime(SolveTime::DNF)),
-            color: TimerContentColor::Success,
+            color: TimerContentColor::Destructive,
         }
     }
 }

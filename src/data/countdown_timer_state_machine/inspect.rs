@@ -109,7 +109,7 @@ impl IsTimerState for Inspect {
             } else {
                 "+2".to_string()
             })),
-            color: TimerContentColor::Neutral,
+            color: TimerContentColor::Destructive,
         }
     }
 }

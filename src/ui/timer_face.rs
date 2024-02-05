@@ -246,14 +246,22 @@ impl TimerFace {
             data::TimerContentColor::Neutral => {
                 self.remove_css_class("wait");
                 self.remove_css_class("ready");
+                self.remove_css_class("warning");
             }
             data::TimerContentColor::Destructive => {
                 self.remove_css_class("ready");
                 self.add_css_class("wait");
+                self.remove_css_class("warning");
+            }
+            data::TimerContentColor::Warning => {
+                self.remove_css_class("wait");
+                self.remove_css_class("ready");
+                self.add_css_class("warning");
             }
             data::TimerContentColor::Success => {
                 self.remove_css_class("wait");
                 self.add_css_class("ready");
+                self.remove_css_class("warning");
             }
         }
     }
