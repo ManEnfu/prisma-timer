@@ -184,6 +184,30 @@ impl PrismaTimerWindow {
             }),
         );
 
+        session.connect_closure(
+            "new-best-solve",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_new_best_solve_cb();
+            }),
+        );
+
+        session.connect_closure(
+            "new-best-ao5",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_new_best_ao5_cb();
+            }),
+        );
+
+        session.connect_closure(
+            "new-best-ao12",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_new_best_ao12_cb();
+            }),
+        );
+
         let sort_model = gtk::SortListModel::new(
             Some(session),
             Some(gtk::CustomSorter::new(|a, b| {
@@ -243,6 +267,23 @@ impl PrismaTimerWindow {
         let imp = self.imp();
         imp.toast_overlay
             .add_toast(adw::Toast::new("Solve Removed"));
+    }
+
+    fn session_new_best_solve_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay
+            .add_toast(adw::Toast::new("New Best Solve"));
+    }
+
+    fn session_new_best_ao5_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay.add_toast(adw::Toast::new("New Best Ao5"));
+    }
+
+    fn session_new_best_ao12_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay
+            .add_toast(adw::Toast::new("New Best Ao12"));
     }
 
     #[template_callback]

@@ -116,6 +116,18 @@ mod imp {
                     Signal::builder("solve-removed")
                         .param_types(Vec::<SignalType>::new())
                         .build(),
+                    Signal::builder("new-best-solve")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                    Signal::builder("new-best-mo3")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                    Signal::builder("new-best-ao5")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
+                    Signal::builder("new-best-ao12")
+                        .param_types(Vec::<SignalType>::new())
+                        .build(),
                 ]
             });
             SIGNALS.as_ref()
@@ -188,6 +200,7 @@ impl Session {
         self.items_changed(index, 0, 1);
         self.solve_updated(index as usize);
         self.emit_by_name::<()>("solve-added", &[]);
+        self.notify_new_best_times();
         item
     }
 
@@ -211,6 +224,26 @@ impl Session {
     /// Remove `SessionItem` object in this session.
     pub fn remove_solve_by_object(&self, obj: &SessionItem) -> Option<SessionItem> {
         self.get_solve_index(obj).and_then(|i| self.remove_solve(i))
+    }
+
+    /// Gets the last solve time of this session.
+    pub fn last_solve_time(&self) -> Option<SolveTime> {
+        self.last_solve().map(|s| s.time())
+    }
+
+    /// Gets the last mean of 3 time of this session.'https://jsonplaceholder.typicode.com/posts/1'
+    pub fn last_mo3(&self) -> Option<SolveTime> {
+        self.last_solve().and_then(|s| s.mo3())
+    }
+
+    /// Gets the last average of 5 time of this session.
+    pub fn last_ao5(&self) -> Option<SolveTime> {
+        self.last_solve().and_then(|s| s.ao5())
+    }
+
+    /// Gets the last average of 12 time of this session.
+    pub fn last_ao12(&self) -> Option<SolveTime> {
+        self.last_solve().and_then(|s| s.ao12())
     }
 
     /// Gets the best solve item of this session.
@@ -253,6 +286,63 @@ impl Session {
             .and_then(SessionItem::ao12)
     }
 
+    /// Gets the index of the best solve item of this session.
+    pub fn best_solve_index(&self) -> Option<usize> {
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, item)| item.time())
+            .map(|(i, _)| i)
+    }
+
+    /// Gets the index of the best mean of 3 time of this session.
+    pub fn best_mo3_index(&self) -> Option<usize> {
+        if self.n_items() < 3 {
+            return None;
+        }
+
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, item)| item.mo3().unwrap_or(SolveTime::DNF))
+            .map(|(i, _)| i)
+    }
+
+    /// Gets the index of the best average of 5 time of this session.
+    pub fn best_ao5_index(&self) -> Option<usize> {
+        if self.n_items() < 5 {
+            return None;
+        }
+
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, item)| item.ao5().unwrap_or(SolveTime::DNF))
+            .map(|(i, _)| i)
+    }
+
+    /// Gets the index of the best average of 12 time of this session.
+    pub fn best_ao12_index(&self) -> Option<usize> {
+        if self.n_items() < 12 {
+            return None;
+        }
+
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, item)| item.ao12().unwrap_or(SolveTime::DNF))
+            .map(|(i, _)| i)
+    }
+
+    /// Computes the mean of 3 of the solve at this index.
     fn compute_mo3(&self, index: usize) -> Option<SolveTime> {
         let list = self.imp().solve_list.borrow();
         if index + 1 >= 3 {
@@ -263,6 +353,7 @@ impl Session {
         }
     }
 
+    /// Computes the average of 5 of the solve at this index.
     fn compute_ao5(&self, index: usize) -> Option<SolveTime> {
         let list = self.imp().solve_list.borrow();
         if index + 1 >= 5 {
@@ -273,6 +364,7 @@ impl Session {
         }
     }
 
+    /// Computes the average of 12 the solve at this index.
     fn compute_ao12(&self, index: usize) -> Option<SolveTime> {
         let list = self.imp().solve_list.borrow();
         if index + 1 >= 12 {
@@ -283,6 +375,7 @@ impl Session {
         }
     }
 
+    /// Updates the mean of 3 of the solve at this index.
     fn update_mo3(&self, index: usize) {
         let mo3 = self.compute_mo3(index);
         if let Some(item) = self.imp().solve_list.borrow().get(index) {
@@ -290,6 +383,7 @@ impl Session {
         }
     }
 
+    /// Updates the average of 5 of the solve at this index.
     fn update_ao5(&self, index: usize) {
         let ao5 = self.compute_ao5(index);
         if let Some(item) = self.imp().solve_list.borrow().get(index) {
@@ -297,6 +391,7 @@ impl Session {
         }
     }
 
+    /// Updates the average of 12 the solve at this index.
     fn update_ao12(&self, index: usize) {
         let ao12 = self.compute_ao12(index);
         if let Some(item) = self.imp().solve_list.borrow().get(index) {
@@ -334,7 +429,7 @@ impl Session {
         self.notify_statistics_changed();
     }
 
-    /// Notify updates of an `SessionItem` object in this session.
+    /// Notifies update on a `SessionItem` object in this session.
     pub fn solve_updated_by_object(&self, obj: &SessionItem) {
         if let Some(index) = self.get_solve_index(obj) {
             self.solve_updated(index);
@@ -343,12 +438,34 @@ impl Session {
         }
     }
 
+    /// Returns the index of the object in this session.
     fn get_solve_index(&self, obj: &SessionItem) -> Option<usize> {
         self.imp()
             .solve_list
             .borrow()
             .iter()
             .position(|item| item == obj)
+    }
+
+    /// Notifies a new best time.
+    fn notify_new_best_times(&self) {
+        let last_i = self.n_items() as usize - 1;
+
+        if self.best_solve_index().is_some_and(|i| i == last_i) {
+            self.emit_by_name::<()>("new-best-solve", &[]);
+        }
+
+        if self.best_mo3_index().is_some_and(|i| i == last_i) {
+            self.emit_by_name::<()>("new-best-mo3", &[]);
+        }
+
+        if self.best_ao5_index().is_some_and(|i| i == last_i) {
+            self.emit_by_name::<()>("new-best-ao5", &[]);
+        }
+
+        if self.best_ao12_index().is_some_and(|i| i == last_i) {
+            self.emit_by_name::<()>("new-best-ao12", &[]);
+        }
     }
 }
 
