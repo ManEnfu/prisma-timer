@@ -6,7 +6,7 @@ use gtk::{gio, glib};
 #[allow(clippy::enum_variant_names)]
 #[doc(hidden)]
 mod imp {
-    use std::cell::RefCell;
+    use std::{cell::RefCell, marker::PhantomData};
 
     use gtk::glib::subclass::{Signal, SignalType};
     use once_cell::sync::Lazy;
@@ -16,20 +16,29 @@ mod imp {
     #[derive(Debug, Default, glib::Properties)]
     #[properties(wrapper_type = super::Session)]
     pub struct Session {
-        #[property(name = "last-solve-string", type = String, get = Self::get_last_solve_string)]
-        #[property(name = "last-mo3-string", type = String, get = Self::get_last_mo3_string)]
-        #[property(name = "last-ao5-string", type = String, get = Self::get_last_ao5_string)]
-        #[property(name = "last-ao12-string", type = String, get = Self::get_last_ao12_string)]
-        #[property(name = "best-solve-string", type = String, get = Self::get_best_solve_string)]
-        #[property(name = "best-mo3-string", type = String, get = Self::get_best_mo3_string)]
-        #[property(name = "best-ao5-string", type = String, get = Self::get_best_ao5_string)]
-        #[property(name = "best-ao12-string", type = String, get = Self::get_best_ao12_string)]
-        pub solve_list: RefCell<Vec<SessionItem>>,
-        pub handler_list: RefCell<Vec<glib::SignalHandlerId>>,
+        pub(super) solve_list: RefCell<Vec<SessionItem>>,
+        pub(super) handler_list: RefCell<Vec<glib::SignalHandlerId>>,
+
+        #[property(get = Self::last_solve_string)]
+        last_solve_string: PhantomData<String>,
+        #[property(get = Self::last_mo3_string)]
+        last_mo3_string: PhantomData<String>,
+        #[property(get = Self::last_ao5_string)]
+        last_ao5_string: PhantomData<String>,
+        #[property(get = Self::last_ao12_string)]
+        last_ao12_string: PhantomData<String>,
+        #[property(get = Self::best_solve_string)]
+        best_solve_string: PhantomData<String>,
+        #[property(get = Self::best_mo3_string)]
+        best_mo3_string: PhantomData<String>,
+        #[property(get = Self::best_ao5_string)]
+        best_ao5_string: PhantomData<String>,
+        #[property(get = Self::best_ao12_string)]
+        best_ao12_string: PhantomData<String>,
     }
 
     impl Session {
-        fn get_last_solve_string(&self) -> String {
+        fn last_solve_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .last()
@@ -37,7 +46,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_last_mo3_string(&self) -> String {
+        fn last_mo3_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .last()
@@ -45,7 +54,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_last_ao5_string(&self) -> String {
+        fn last_ao5_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .last()
@@ -53,7 +62,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_last_ao12_string(&self) -> String {
+        fn last_ao12_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .last()
@@ -61,7 +70,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_best_solve_string(&self) -> String {
+        fn best_solve_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .iter()
@@ -70,7 +79,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_best_mo3_string(&self) -> String {
+        fn best_mo3_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .iter()
@@ -79,7 +88,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_best_ao5_string(&self) -> String {
+        fn best_ao5_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .iter()
@@ -88,7 +97,7 @@ mod imp {
                 .map_or(String::default(), |t| t.to_string())
         }
 
-        fn get_best_ao12_string(&self) -> String {
+        fn best_ao12_string(&self) -> String {
             self.solve_list
                 .borrow()
                 .iter()
@@ -165,11 +174,6 @@ impl Session {
         glib::Object::builder().build()
     }
 
-    /// Gets the last solve of this session.
-    pub fn last_solve(&self) -> Option<SessionItem> {
-        self.imp().solve_list.borrow().last().cloned()
-    }
-
     /// Gets the nth solve of this session.
     pub fn get(&self, index: usize) -> Option<SessionItem> {
         self.imp().solve_list.borrow().get(index).cloned()
@@ -184,6 +188,15 @@ impl Session {
             .borrow()
             .get(index + 1 - n_item..index + 1)
             .map(|s| s.to_vec())
+    }
+
+    /// Returns the index of the object in this session.
+    fn get_solve_index(&self, obj: &SessionItem) -> Option<usize> {
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .position(|item| item == obj)
     }
 
     /// Adds a solve to this session.
@@ -226,12 +239,17 @@ impl Session {
         self.get_solve_index(obj).and_then(|i| self.remove_solve(i))
     }
 
+    /// Gets the last solve of this session.
+    pub fn last_solve(&self) -> Option<SessionItem> {
+        self.imp().solve_list.borrow().last().cloned()
+    }
+
     /// Gets the last solve time of this session.
     pub fn last_solve_time(&self) -> Option<SolveTime> {
         self.last_solve().map(|s| s.time())
     }
 
-    /// Gets the last mean of 3 time of this session.'https://jsonplaceholder.typicode.com/posts/1'
+    /// Gets the last mean of 3 time of this session.
     pub fn last_mo3(&self) -> Option<SolveTime> {
         self.last_solve().and_then(|s| s.mo3())
     }
@@ -254,6 +272,16 @@ impl Session {
             .iter()
             .min_by_key(|item| item.time())
             .cloned()
+    }
+
+    /// Gets the best solve time of this session.
+    pub fn best_solve_time(&self) -> Option<SolveTime> {
+        self.imp()
+            .solve_list
+            .borrow()
+            .iter()
+            .min_by_key(|item| item.time())
+            .map(SessionItem::time)
     }
 
     /// Gets the best mean of 3 time of this session.
@@ -399,19 +427,7 @@ impl Session {
         }
     }
 
-    /// Notify changes in statistics of the session.
-    pub fn notify_statistics_changed(&self) {
-        self.notify_last_solve_string();
-        self.notify_last_mo3_string();
-        self.notify_last_ao5_string();
-        self.notify_last_ao12_string();
-        self.notify_best_solve_string();
-        self.notify_best_mo3_string();
-        self.notify_best_ao5_string();
-        self.notify_last_ao12_string();
-    }
-
-    /// Notify updates of an item in this index.
+    /// Notifies update on an item in this index.
     pub fn solve_updated(&self, index: usize) {
         let len = self.n_items() as usize;
 
@@ -438,13 +454,16 @@ impl Session {
         }
     }
 
-    /// Returns the index of the object in this session.
-    fn get_solve_index(&self, obj: &SessionItem) -> Option<usize> {
-        self.imp()
-            .solve_list
-            .borrow()
-            .iter()
-            .position(|item| item == obj)
+    /// Notify changes in statistics of the session.
+    pub fn notify_statistics_changed(&self) {
+        self.notify_last_solve_string();
+        self.notify_last_mo3_string();
+        self.notify_last_ao5_string();
+        self.notify_last_ao12_string();
+        self.notify_best_solve_string();
+        self.notify_best_mo3_string();
+        self.notify_best_ao5_string();
+        self.notify_last_ao12_string();
     }
 
     /// Notifies a new best time.
