@@ -77,7 +77,7 @@ glib::wrapper! {
 #[gtk::template_callbacks]
 impl SolveDialog {
     pub fn new(session: data::Session, index: u32) -> Self {
-        let solve = session.get(index as usize);
+        let solve = session.get_solve(index as usize);
 
         glib::Object::builder()
             .property("session", session)
@@ -94,9 +94,9 @@ impl SolveDialog {
         imp.average_group.set_visible(index >= 4);
 
         imp.last_5_solves
-            .replace(session.get_slice(index as usize, 5));
+            .replace(session.get_solve_slice(index as usize, 5));
         imp.last_12_solves
-            .replace(session.get_slice(index as usize, 12));
+            .replace(session.get_solve_slice(index as usize, 12));
         self.update_ao5_expander_row();
         self.update_ao12_expander_row();
 

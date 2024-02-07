@@ -175,11 +175,12 @@ impl Session {
     }
 
     /// Gets the nth solve of this session.
-    pub fn get(&self, index: usize) -> Option<SessionItem> {
+    pub fn get_solve(&self, index: usize) -> Option<SessionItem> {
         self.imp().solve_list.borrow().get(index).cloned()
     }
 
-    pub fn get_slice(&self, index: usize, n_item: usize) -> Option<Vec<SessionItem>> {
+    /// Gets a slice of sequence of `n_item` solves, starting from `index`.
+    pub fn get_solve_slice(&self, index: usize, n_item: usize) -> Option<Vec<SessionItem>> {
         if n_item > index + 1 {
             return None;
         }
@@ -665,8 +666,8 @@ mod tests {
 
     fn build_and_modify_test_session() -> Session {
         let session = build_test_session();
-        session.get(6).unwrap().set_penalty(Penalty::Plus2);
-        session.get(8).unwrap().set_penalty(Penalty::Dnf);
+        session.get_solve(6).unwrap().set_penalty(Penalty::Plus2);
+        session.get_solve(8).unwrap().set_penalty(Penalty::Dnf);
         session
     }
 
