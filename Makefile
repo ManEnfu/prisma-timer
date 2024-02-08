@@ -14,7 +14,10 @@ setup: clean
 	fenv gen ./build-aux/io.github.manenfu.PrismaTimer.json
 	fenv exec -- meson --prefix=/app _build
 
-build:
+validate-schemas:
+	fenv exec -- glib-compile-schemas --strict --dry-run ./data
+
+build: validate-schemas
 	fenv exec -- ninja -C _build install
 
 run:
