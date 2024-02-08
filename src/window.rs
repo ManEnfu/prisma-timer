@@ -128,7 +128,10 @@ mod imp {
         fn close_request(&self) -> glib::Propagation {
             let obj = self.obj();
 
-            obj.save_window_size().expect("failed to save window state");
+            let result = obj.save_window_size();
+            if let Err(e) = result {
+                log::error!("Failed to save window state. cause: {}", e);
+            }
 
             glib::Propagation::Proceed
         }
