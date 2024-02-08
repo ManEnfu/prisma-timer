@@ -113,14 +113,27 @@ mod imp {
 
             obj.set_timer_state_machine(data::TimerStateMachine::new());
 
+            obj.setup_settings();
             obj.setup_gactions();
             obj.setup_event_controllers();
             obj.setup_list();
+
+            obj.load_window_size();
         }
     }
 
     impl WidgetImpl for PrismaTimerWindow {}
-    impl WindowImpl for PrismaTimerWindow {}
+
+    impl WindowImpl for PrismaTimerWindow {
+        fn close_request(&self) -> glib::Propagation {
+            let obj = self.obj();
+
+            obj.save_window_size().expect("failed to save window state");
+
+            glib::Propagation::Proceed
+        }
+    }
+
     impl ApplicationWindowImpl for PrismaTimerWindow {}
     impl AdwApplicationWindowImpl for PrismaTimerWindow {}
 }
@@ -256,11 +269,12 @@ impl PrismaTimerWindow {
     fn save_window_size(&self) -> Result<(), glib::BoolError> {
         let settings = self.settings();
 
-        let size = self.default_size();
+        let height = self.height();
+        let width = self.width();
         let is_maximized = self.is_maximized();
 
-        settings.set_int("window-height", size.0)?;
-        settings.set_int("window-width", size.1)?;
+        settings.set_int("window-height", height)?;
+        settings.set_int("window-width", width)?;
         settings.set_boolean("window-is-maximized", is_maximized)?;
 
         Ok(())
@@ -269,8 +283,8 @@ impl PrismaTimerWindow {
     fn load_window_size(&self) {
         let settings = self.settings();
 
-        let width = settings.int("window-width");
         let height = settings.int("window-height");
+        let width = settings.int("window-width");
         let is_maximized = settings.boolean("window-is-maximized");
 
         self.set_default_size(width, height);
