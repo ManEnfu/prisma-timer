@@ -23,6 +23,7 @@ use gtk::prelude::*;
 use gtk::{gio, glib};
 
 use crate::config::{APP_ID, VERSION};
+use crate::ui;
 use crate::PrismaTimerWindow;
 
 #[doc(hidden)]
@@ -87,22 +88,30 @@ impl PrismaTimerApplication {
     }
 
     fn setup_gactions(&self) {
-        let quit_action = gio::ActionEntry::builder("quit")
-            .activate(move |app: &Self, _, _| app.quit())
-            .build();
-        let about_action = gio::ActionEntry::builder("about")
-            .activate(move |app: &Self, _, _| app.show_about())
-            .build();
-        self.add_action_entries([quit_action, about_action]);
+        self.add_action_entries([
+            gio::ActionEntry::builder("quit")
+                .activate(move |app: &Self, _, _| app.quit())
+                .build(),
+            gio::ActionEntry::builder("about")
+                .activate(move |app: &Self, _, _| app.show_about())
+                .build(),
+            gio::ActionEntry::builder("preferences")
+                .activate(move |app: &Self, _, _| app.show_preferences())
+                .build(),
+        ]);
     }
 
     fn setup_shortcuts(&self) {
         self.set_accels_for_action("app.quit", &["<primary>q"]);
+        self.set_accels_for_action("app.preferences", &["<primary>comma"]);
         self.set_accels_for_action("win.show-help-overlay", &["<primary>question"]);
     }
 
     fn show_about(&self) {
-        let window = self.active_window().unwrap();
+        let window = self
+            .active_window()
+            .expect("an active window must be set for this application");
+
         let about = adw::AboutWindow::builder()
             .transient_for(&window)
             .application_name("Prisma Timer")
@@ -114,5 +123,15 @@ impl PrismaTimerApplication {
             .build();
 
         about.present();
+    }
+
+    fn show_preferences(&self) {
+        let window = self
+            .active_window()
+            .expect("an active window must be set for this application");
+
+        let preferences_window = ui::PreferencesWindow::new(&window);
+
+        preferences_window.present();
     }
 }
