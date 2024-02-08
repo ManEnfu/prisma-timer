@@ -10,7 +10,7 @@
       <summary>Default window height</summary>
     </key>
     <key name="window-is-maximized" type="b">
-      <default>-1</default>
+      <default>false</default>
       <summary>Default window maximized status</summary>
     </key>
   </schema>
