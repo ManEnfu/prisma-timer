@@ -1,11 +1,13 @@
 use crate::prelude::*;
 use crate::subclass::prelude::*;
-use crate::{data, ui};
+use crate::{config, data, ui};
 use gtk::{gdk, gio, glib};
 
 #[doc(hidden)]
 mod imp {
     use std::cell::{Cell, RefCell};
+
+    use once_cell::sync::OnceCell;
 
     use crate::util::TemplateCallbacks;
 
@@ -43,6 +45,8 @@ mod imp {
         /// related to timing (i.e. sidebar).
         #[property(get, set)]
         pub should_collapse: Cell<bool>,
+
+        pub(super) settings: OnceCell<gio::Settings>,
     }
 
     #[glib::object_subclass]
@@ -78,15 +82,31 @@ mod imp {
             self.timer_face
                 .set_timer_state_machine(data::SimpleTimerStateMachine::new());
 
+            obj.setup_settings();
             obj.setup_gactions();
             obj.setup_event_controllers();
             obj.setup_list();
             obj.setup_timer_face();
+
+            obj.load_window_size();
         }
     }
 
     impl WidgetImpl for PrismaTimerWindow {}
-    impl WindowImpl for PrismaTimerWindow {}
+
+    impl WindowImpl for PrismaTimerWindow {
+        fn close_request(&self) -> glib::Propagation {
+            let obj = self.obj();
+
+            let result = obj.save_window_size();
+            if let Err(e) = result {
+                log::error!("Failed to save window state. cause: {}", e);
+            }
+
+            glib::Propagation::Proceed
+        }
+    }
+
     impl ApplicationWindowImpl for PrismaTimerWindow {}
     impl AdwApplicationWindowImpl for PrismaTimerWindow {}
 }
@@ -103,6 +123,15 @@ impl PrismaTimerWindow {
         glib::Object::builder()
             .property("application", application)
             .build()
+    }
+
+    fn setup_settings(&self) {
+        let imp = self.imp();
+
+        let settings = gio::Settings::new(config::APP_ID);
+        imp.settings
+            .set(settings)
+            .expect("`settings` should not be set before `setup_settings` is called");
     }
 
     fn setup_gactions(&self) {
@@ -154,6 +183,30 @@ impl PrismaTimerWindow {
             }),
         );
 
+        session.connect_closure(
+            "new-best-solve",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_new_best_solve_cb();
+            }),
+        );
+
+        session.connect_closure(
+            "new-best-ao5",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_new_best_ao5_cb();
+            }),
+        );
+
+        session.connect_closure(
+            "new-best-ao12",
+            false,
+            glib::closure_local!(@strong self as obj => move |_: &data::Session| {
+                obj.session_new_best_ao12_cb();
+            }),
+        );
+
         let sort_model = gtk::SortListModel::new(
             Some(session),
             Some(gtk::CustomSorter::new(|a, b| {
@@ -177,6 +230,38 @@ impl PrismaTimerWindow {
 
         imp.list_view.set_model(Some(&selection_model));
         imp.list_view.set_factory(Some(&factory));
+    }
+
+    fn settings(&self) -> &gio::Settings {
+        self.imp()
+            .settings
+            .get()
+            .expect("`settings` should be set by `setup_settings` first")
+    }
+
+    fn save_window_size(&self) -> Result<(), glib::BoolError> {
+        let settings = self.settings();
+
+        let height = self.height();
+        let width = self.width();
+        let is_maximized = self.is_maximized();
+
+        settings.set_int("window-height", height)?;
+        settings.set_int("window-width", width)?;
+        settings.set_boolean("window-is-maximized", is_maximized)?;
+
+        Ok(())
+    }
+
+    fn load_window_size(&self) {
+        let settings = self.settings();
+
+        let height = settings.int("window-height");
+        let width = settings.int("window-width");
+        let is_maximized = settings.boolean("window-is-maximized");
+
+        self.set_default_size(width, height);
+        self.set_maximized(is_maximized);
     }
 
     fn setup_timer_face(&self) {
@@ -218,6 +303,23 @@ impl PrismaTimerWindow {
         let imp = self.imp();
         imp.toast_overlay
             .add_toast(adw::Toast::new("Solve Removed"));
+    }
+
+    fn session_new_best_solve_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay
+            .add_toast(adw::Toast::new("New Best Solve"));
+    }
+
+    fn session_new_best_ao5_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay.add_toast(adw::Toast::new("New Best Ao5"));
+    }
+
+    fn session_new_best_ao12_cb(&self) {
+        let imp = self.imp();
+        imp.toast_overlay
+            .add_toast(adw::Toast::new("New Best Ao12"));
     }
 
     #[template_callback]

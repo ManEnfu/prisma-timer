@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="prisma-timer">
-	<schema id="io.github.manenfu.PrismaTimer" path="/io/github/manenfu/PrismaTimer/">
-	</schema>
+  <schema id="io.github.manenfu.PrismaTimer" path="/io/github/manenfu/PrismaTimer/">
+    <key name="window-width" type="i">
+      <default>-1</default>
+      <summary>Default window width</summary>
+    </key>
+    <key name="window-height" type="i">
+      <default>-1</default>
+      <summary>Default window height</summary>
+    </key>
+    <key name="window-is-maximized" type="b">
+      <default>false</default>
+      <summary>Default window maximized status</summary>
+    </key>
+  </schema>
 </schemalist>
