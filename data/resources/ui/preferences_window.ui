@@ -26,6 +26,23 @@
             </child>
           </object>
         </child>
+        <child>
+          <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Appearance</property>
+            <child>
+              <object class="AdwSwitchRow" id="use_system_color_scheme_switch">
+                <property name="title" translatable="yes">Use system color scheme</property>
+                <property name="subtitle" translatable="yes">If the system supports color schemes, the application will follow the color scheme set by the system.</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="dark_mode_switch">
+                <property name="title" translatable="yes">Dark mode</property>
+                <property name="subtitle" translatable="yes">Force dark mode on the application.</property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
   </template>
