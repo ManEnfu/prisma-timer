@@ -17,5 +17,13 @@
       <default>false</default>
       <summary>Use inspection countdown</summary>
     </key>
+    <key name="use-system-color-scheme" type="b">
+      <default>true</default>
+      <summary>Use system color scheme if supported</summary>
+    </key>
+    <key name="dark-mode" type="b">
+      <default>false</default>
+      <summary>Force dark mode</summary>
+    </key>
   </schema>
 </schemalist>
