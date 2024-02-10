@@ -14,6 +14,9 @@ mod imp {
     #[template(resource = "/io/github/manenfu/PrismaTimer/ui/preferences_window.ui")]
     pub struct PreferencesWindow {
         #[template_child]
+        pub(super) timer_use_countdown_switch: TemplateChild<adw::SwitchRow>,
+
+        #[template_child]
         pub(super) use_system_color_scheme_switch: TemplateChild<adw::SwitchRow>,
         #[template_child]
         pub(super) dark_mode_switch: TemplateChild<adw::SwitchRow>,
@@ -50,6 +53,8 @@ mod imp {
             let obj = self.obj();
 
             obj.setup_settings();
+
+            obj.setup_timer_group();
             obj.setup_appearance_group();
         }
     }
@@ -80,6 +85,19 @@ impl PreferencesWindow {
         imp.settings
             .set(settings)
             .expect("`settings` should not be set before `setup_settings` is called");
+    }
+
+    fn setup_timer_group(&self) {
+        let imp = self.imp();
+        let settings = self.settings();
+
+        settings
+            .bind(
+                "timer-use-countdown",
+                &*imp.timer_use_countdown_switch,
+                "active",
+            )
+            .build();
     }
 
     fn setup_appearance_group(&self) {

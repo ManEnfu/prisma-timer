@@ -80,7 +80,7 @@ mod imp {
             let obj = self.obj();
 
             self.timer_face
-                .set_timer_state_machine(data::SimpleTimerStateMachine::new());
+                .use_timer_state_machine(data::SimpleTimerStateMachine::new());
 
             obj.setup_settings();
             obj.setup_gactions();
@@ -278,10 +278,8 @@ impl PrismaTimerWindow {
     fn timer_face_elements_hidden_changed_cb(&self, tf: &ui::TimerFace) {
         let imp = self.imp();
 
-        if tf.elements_hidden() {
-            if imp.split_view.is_collapsed() {
-                imp.split_view.set_show_sidebar(false);
-            }
+        if tf.elements_hidden() && imp.split_view.is_collapsed() {
+            imp.split_view.set_show_sidebar(false);
         }
     }
 

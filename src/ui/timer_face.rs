@@ -34,9 +34,10 @@ mod imp {
         #[template_child]
         pub last_ao12_label: TemplateChild<gtk::Label>,
 
-        #[property(get, set = Self::set_timer_state_machine)]
+        #[property(get)]
         pub timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+        pub queued_timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
 
         #[property(get = Self::is_elements_hidden)]
         pub elements_hidden: PhantomData<bool>,
@@ -50,7 +51,7 @@ mod imp {
     }
 
     impl TimerFace {
-        fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
+        pub(super) fn set_timer_state_machine(&self, v: Option<data::TimerStateMachine>) {
             let obj = self.obj();
             let mut handlers = self.timer_state_machine_handlers.borrow_mut();
 
@@ -61,6 +62,8 @@ mod imp {
             }
 
             if let Some(sm) = &v {
+                log::debug!("switch to new state machine: {}", sm.type_().name());
+
                 handlers.push(sm.connect_closure(
                     "state-changed",
                     false,
@@ -76,6 +79,8 @@ mod imp {
                 ))
             }
             self.timer_state_machine.replace(v);
+
+            obj.notify_timer_state_machine();
         }
 
         fn set_last_solve(&self, v: Option<data::SessionItem>) {
@@ -230,6 +235,31 @@ impl TimerFace {
 
     fn setup_callbacks(&self) {}
 
+    /// Tells the widget to use this state machine.
+    ///
+    /// This may not set the state machine to be used right away.
+    /// The switch to the new state machine only occurs when the old state
+    /// machine is not in `running` state. Otherwise, the new state machine
+    /// will be queued until the old one finishes running, at which the
+    /// switch will be done.
+    pub fn use_timer_state_machine(&self, state_machine: impl IsA<data::TimerStateMachine>) {
+        let imp = self.imp();
+        let state_machine = state_machine.upcast();
+
+        let do_switch = imp
+            .timer_state_machine
+            .borrow()
+            .as_ref()
+            .map_or(true, |sm| !sm.is_running());
+
+        if do_switch {
+            imp.set_timer_state_machine(Some(state_machine));
+        } else {
+            log::debug!("queue new state machine: {}", state_machine.type_().name());
+            imp.queued_timer_state_machine.replace(Some(state_machine));
+        }
+    }
+
     pub(self) fn timer_state_changed_cb(&self, sm: &data::TimerStateMachine) {
         let imp = self.imp();
 
@@ -246,6 +276,10 @@ impl TimerFace {
             if let Some(data::TimerContentValue::SolveTime(st)) = content.value {
                 self.submit_solve(data::SolveData::new(st, "".to_string()));
             }
+        }
+
+        if let Some(sm) = imp.queued_timer_state_machine.take() {
+            imp.set_timer_state_machine(Some(sm));
         }
     }
 
