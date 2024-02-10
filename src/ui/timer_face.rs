@@ -39,6 +39,10 @@ mod imp {
         timer_state_machine_handlers: RefCell<Vec<glib::SignalHandlerId>>,
         pub queued_timer_state_machine: RefCell<Option<data::TimerStateMachine>>,
 
+        #[property(get, set = Self::set_timer_state_machine_provider, nullable)]
+        pub timer_state_machine_provider: RefCell<Option<data::TimerStateMachineProvider>>,
+        pub timer_state_machine_provider_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+
         #[property(get = Self::is_elements_hidden)]
         pub elements_hidden: PhantomData<bool>,
 
@@ -76,11 +80,36 @@ mod imp {
                     glib::clone!(@weak obj => move |_, _| {
                         obj.notify_elements_hidden()
                     }),
-                ))
+                ));
             }
+
             self.timer_state_machine.replace(v);
 
             obj.notify_timer_state_machine();
+        }
+
+        fn set_timer_state_machine_provider(&self, v: Option<data::TimerStateMachineProvider>) {
+            let obj = self.obj();
+            let mut handlers = self.timer_state_machine_provider_handlers.borrow_mut();
+
+            if let Some(provider) = self.timer_state_machine_provider.take() {
+                for id in handlers.drain(..) {
+                    provider.disconnect(id);
+                }
+            }
+
+            if let Some(provider) = &v {
+                handlers.push(provider.connect_notify_local(
+                    Some("timer-state-machine"),
+                    glib::clone!(@weak obj => move |provider, _| {
+                        obj.use_timer_state_machine(provider.timer_state_machine())
+                    }),
+                ));
+
+                obj.use_timer_state_machine(provider.timer_state_machine());
+            }
+
+            self.timer_state_machine_provider.replace(v);
         }
 
         fn set_last_solve(&self, v: Option<data::SessionItem>) {
@@ -250,7 +279,7 @@ impl TimerFace {
             .timer_state_machine
             .borrow()
             .as_ref()
-            .map_or(true, |sm| !sm.is_running());
+            .map_or(true, |sm| sm.is_idle());
 
         if do_switch {
             imp.set_timer_state_machine(Some(state_machine));
@@ -263,6 +292,7 @@ impl TimerFace {
     pub(self) fn timer_state_changed_cb(&self, sm: &data::TimerStateMachine) {
         let imp = self.imp();
 
+        let is_idle = sm.is_idle();
         let is_running = sm.is_running();
         let is_finished = sm.is_finished();
         let content = sm.content();
@@ -278,8 +308,10 @@ impl TimerFace {
             }
         }
 
-        if let Some(sm) = imp.queued_timer_state_machine.take() {
-            imp.set_timer_state_machine(Some(sm));
+        if is_idle {
+            if let Some(sm) = imp.queued_timer_state_machine.take() {
+                imp.set_timer_state_machine(Some(sm));
+            }
         }
     }
 
