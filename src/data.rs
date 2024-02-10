@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 pub use countdown_timer_state_machine::CountdownTimerStateMachine;
 pub use penalty::Penalty;
 pub use session::Session;
@@ -29,3 +31,8 @@ mod timer_state;
 mod timer_state_machine;
 mod timer_state_machine_provider;
 mod timer_state_machine_settings_provider;
+
+pub const TICK_INTERVAL: Duration = Duration::from_millis(10);
+pub const INSPECTION_TIME: Duration = Duration::from_secs(17);
+pub const PLUS_2_THRESHOLD: Duration = Duration::from_secs(2);
+pub const WAIT_TIMEOUT: Duration = Duration::from_millis(500);

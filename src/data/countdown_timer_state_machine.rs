@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use crate::data::{SimpleTimerStateMachine, TimerStateMachine};
 use crate::prelude::*;
 use crate::subclass::prelude::*;
@@ -13,11 +11,6 @@ mod inspect;
 mod inspect_ready;
 mod inspect_wait;
 mod timing;
-
-const TICK_INTERVAL: Duration = Duration::from_millis(10);
-const INSPECTION_TIME: Duration = Duration::from_secs(17);
-const PLUS_2_THRESHOLD: Duration = Duration::from_secs(2);
-const WAIT_TIMEOUT: Duration = Duration::from_millis(500);
 
 #[doc(hidden)]
 mod imp {

@@ -3,11 +3,14 @@ use std::time::{Duration, Instant};
 use gtk::glib;
 
 use crate::{
-    data::{IsTimerState, TimerContent, TimerContentColor, TimerContentValue, TimerStateMachine},
+    data::{
+        IsTimerState, TimerContent, TimerContentColor, TimerContentValue, TimerStateMachine,
+        INSPECTION_TIME, TICK_INTERVAL,
+    },
     prelude::*,
 };
 
-use super::{dnf::Dnf, inspect_wait::InspectWait, INSPECTION_TIME, TICK_INTERVAL};
+use super::{dnf::Dnf, inspect_wait::InspectWait};
 
 pub struct Inspect {
     state_machine: glib::WeakRef<TimerStateMachine>,

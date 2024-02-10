@@ -1,15 +1,11 @@
-use std::time::Duration;
-
 use gtk::glib;
 
 use crate::{
-    data::{IsTimerState, TimerContent, TimerContentColor, TimerStateMachine},
+    data::{IsTimerState, TimerContent, TimerContentColor, TimerStateMachine, WAIT_TIMEOUT},
     prelude::*,
 };
 
 use super::{idle::Idle, ready::Ready};
-
-const WAIT_TIMEOUT: u64 = 500;
 
 pub struct Wait {
     state_machine: glib::WeakRef<TimerStateMachine>,
@@ -25,7 +21,7 @@ impl Wait {
 
         let timeout_id = state_machine.map(|sm| {
             glib::timeout_add_local_once(
-                Duration::from_millis(WAIT_TIMEOUT),
+                WAIT_TIMEOUT,
                 glib::clone!(@weak sm => move || {
                     sm.press_timeout();
                 }),

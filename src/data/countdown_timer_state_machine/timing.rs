@@ -3,14 +3,14 @@ use std::time::{Duration, Instant};
 use crate::{
     data::{
         IsTimerState, Penalty, SolveTime, TimerContent, TimerContentColor, TimerContentValue,
-        TimerStateMachine,
+        TimerStateMachine, TICK_INTERVAL,
     },
     prelude::*,
 };
 
 use gtk::glib;
 
-use super::{finished::Finished, TICK_INTERVAL};
+use super::finished::Finished;
 
 pub struct Timing {
     state_machine: glib::WeakRef<TimerStateMachine>,

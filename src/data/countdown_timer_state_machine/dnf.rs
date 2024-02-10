@@ -3,12 +3,12 @@ use gtk::glib;
 use crate::{
     data::{
         IsTimerState, SolveTime, TimerContent, TimerContentColor, TimerContentValue,
-        TimerStateMachine,
+        TimerStateMachine, WAIT_TIMEOUT,
     },
     prelude::*,
 };
 
-use super::{idle::Idle, WAIT_TIMEOUT};
+use super::idle::Idle;
 
 pub struct Dnf {
     state_machine: glib::WeakRef<TimerStateMachine>,

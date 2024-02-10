@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use crate::{
     data::{
         IsTimerState, Penalty, SolveTime, TimerContent, TimerContentColor, TimerContentValue,
-        TimerStateMachine,
+        TimerStateMachine, TICK_INTERVAL,
     },
     prelude::*,
 };
@@ -11,8 +11,6 @@ use crate::{
 use gtk::glib;
 
 use super::finished::Finished;
-
-const TICK_INTERVAL: u64 = 10;
 
 pub struct Timing {
     state_machine: glib::WeakRef<TimerStateMachine>,
@@ -31,7 +29,7 @@ impl Timing {
 
         let tick_id = state_machine.map(|sm| {
             glib::timeout_add_local(
-                Duration::from_millis(TICK_INTERVAL),
+                TICK_INTERVAL,
                 glib::clone!(@weak sm => @default-return glib::ControlFlow::Continue, move || {
                     sm.tick();
                     glib::ControlFlow::Continue
