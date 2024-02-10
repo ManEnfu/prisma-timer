@@ -58,7 +58,7 @@ glib::wrapper! {
     pub struct TimerStateMachine(ObjectInterface<imp::TimerStateMachineInterface>);
 }
 
-/// Trait that contains defined method in `StateMachine`
+/// Trait that contains defined method in `TimerStateMachine`
 pub trait TimerStateMachineExt: 'static {
     fn press(&self);
     fn release(&self);
@@ -122,7 +122,7 @@ impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
     }
 }
 
-/// Trait that must be implemented by objects that implements `StateMachine`.
+/// Trait that must be implemented by objects that implements `TimerStateMachine`.
 pub trait TimerStateMachineImpl: ObjectImpl {
     fn press(&self);
     fn release(&self);

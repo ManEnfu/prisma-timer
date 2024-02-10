@@ -23,3 +23,4 @@ mod statistics;
 mod timer_content;
 mod timer_state;
 mod timer_state_machine;
+mod timer_state_machine_provider;
