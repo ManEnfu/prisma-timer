@@ -33,6 +33,7 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
+                    glib::ParamSpecBoolean::builder("idle").build(),
                     glib::ParamSpecBoolean::builder("finished").build(),
                     glib::ParamSpecBoolean::builder("running").build(),
                 ]
@@ -65,6 +66,7 @@ pub trait TimerStateMachineExt: 'static {
     fn cancel(&self);
     fn press_timeout(&self);
     fn tick(&self);
+    fn is_idle(&self) -> bool;
     fn is_finished(&self) -> bool;
     fn is_running(&self) -> bool;
     fn content(&self) -> TimerContent;
@@ -104,6 +106,10 @@ impl<O: IsA<TimerStateMachine>> TimerStateMachineExt for O {
             .interface::<TimerStateMachine>()
             .expect(EXPECT_IMPLEMENT);
         (iface.as_ref().tick)(self.upcast_ref())
+    }
+
+    fn is_idle(&self) -> bool {
+        self.property("idle")
     }
 
     fn is_finished(&self) -> bool {

@@ -33,6 +33,10 @@ impl IsTimerState for Idle {
         Box::new(Wait::new(self.state_machine.upgrade().as_ref()))
     }
 
+    fn is_idle(&self) -> bool {
+        true
+    }
+
     fn content(&self) -> TimerContent {
         TimerContent {
             value: None,

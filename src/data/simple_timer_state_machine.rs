@@ -32,6 +32,8 @@ mod imp {
         pub(super) state_: RefCell<Option<Box<dyn IsTimerState>>>,
         pub(super) is_pressed: Cell<bool>,
 
+        #[property(get = Self::is_idle, override_interface = TimerStateMachine)]
+        idle: PhantomData<bool>,
         #[property(get = Self::is_finished, override_interface = TimerStateMachine)]
         finished: PhantomData<bool>,
         #[property(get = Self::is_running, override_interface = TimerStateMachine)]
@@ -39,6 +41,14 @@ mod imp {
     }
 
     impl SimpleTimerStateMachine {
+        fn is_idle(&self) -> bool {
+            self.state_
+                .borrow()
+                .as_ref()
+                .map(|s| s.is_idle())
+                .unwrap_or_default()
+        }
+
         fn is_finished(&self) -> bool {
             self.state_
                 .borrow()
@@ -59,6 +69,7 @@ mod imp {
             let obj = self.obj();
             self.state_.replace(state);
             obj.emit_by_name::<()>("state-changed", &[]);
+            obj.notify_idle();
             obj.notify_running();
             obj.notify_finished();
         }

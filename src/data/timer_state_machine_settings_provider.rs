@@ -72,7 +72,7 @@ mod imp {
 }
 
 glib::wrapper! {
-    /// A provider that provides `TimerStateMachine` based on 
+    /// A provider that provides `TimerStateMachine` based on
     /// application settings.
     pub struct TimerStateMachineSettingsProvider(ObjectSubclass<imp::TimerStateMachineSettingsProvider>)
         @implements TimerStateMachineProvider;

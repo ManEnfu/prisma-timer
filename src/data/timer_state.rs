@@ -29,6 +29,10 @@ pub trait IsTimerState {
         self.noop()
     }
 
+    fn is_idle(&self) -> bool {
+        false
+    }
+
     fn is_finished(&self) -> bool {
         false
     }
