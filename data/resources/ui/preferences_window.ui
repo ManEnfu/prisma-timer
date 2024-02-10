@@ -24,6 +24,12 @@
                 </child>
               </object>
             </child>
+            <child>
+              <object class="AdwSwitchRow" id="timer_use_countdown_switch">
+                <property name="title" translatable="yes">Use inspection countdown</property>
+                <property name="subtitle" translatable="yes">Enable 15-second inspection countdown, with +2/DNF penalty added if the inspection takes longer than 15 seconds.</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>

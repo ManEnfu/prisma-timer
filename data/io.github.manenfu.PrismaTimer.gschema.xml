@@ -13,5 +13,9 @@
       <default>false</default>
       <summary>Default window maximized status</summary>
     </key>
+    <key name="timer-use-countdown" type="b">
+      <default>false</default>
+      <summary>Use inspection countdown</summary>
+    </key>
   </schema>
 </schemalist>
