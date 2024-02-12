@@ -14,6 +14,8 @@ mod imp {
     #[template(resource = "/io/github/manenfu/PrismaTimer/ui/preferences_window.ui")]
     pub struct PreferencesWindow {
         #[template_child]
+        pub(super) timer_touch_only_switch: TemplateChild<adw::SwitchRow>,
+        #[template_child]
         pub(super) timer_use_countdown_switch: TemplateChild<adw::SwitchRow>,
 
         #[template_child]
@@ -90,6 +92,14 @@ impl PreferencesWindow {
     fn setup_timer_group(&self) {
         let imp = self.imp();
         let settings = self.settings();
+
+        settings
+            .bind(
+                "timer-touch-only",
+                &*imp.timer_use_countdown_switch,
+                "active",
+            )
+            .build();
 
         settings
             .bind(

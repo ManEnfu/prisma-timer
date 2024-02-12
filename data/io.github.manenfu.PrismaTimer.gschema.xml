@@ -13,6 +13,10 @@
       <default>false</default>
       <summary>Default window maximized status</summary>
     </key>
+    <key name="timer-touch-only" type="b">
+      <default>false</default>
+      <summary>Whether timer is activated using only touch and keyboard</summary>
+    </key>
     <key name="timer-use-countdown" type="b">
       <default>false</default>
       <summary>Use inspection countdown</summary>
