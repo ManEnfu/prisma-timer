@@ -96,7 +96,7 @@ impl PreferencesWindow {
         settings
             .bind(
                 "timer-touch-only",
-                &*imp.timer_use_countdown_switch,
+                &*imp.timer_touch_only_switch,
                 "active",
             )
             .build();

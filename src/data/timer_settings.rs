@@ -15,7 +15,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, glib::Properties)]
-    #[properties(wrapper_type = timer_settings::TimerSettings)]
+    #[properties(wrapper_type = super::TimerSettings)]
     pub struct TimerSettings {
         pub(super) settings: gio::Settings,
 
@@ -51,7 +51,7 @@ mod imp {
     #[glib::object_subclass]
     impl ObjectSubclass for TimerSettings {
         const NAME: &'static str = "PtTimerSettings";
-        type Type = timer_settings::TimerSettings;
+        type Type = super::TimerSettings;
         type Interfaces = (TimerStateMachineProvider,);
 
         fn new() -> Self {
