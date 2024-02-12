@@ -1,5 +1,5 @@
 use crate::data::TimerState;
-use crate::{data, ui};
+use crate::{config, data, ui};
 use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{gdk, gio, glib};
@@ -7,6 +7,8 @@ use gtk::{gdk, gio, glib};
 #[doc(hidden)]
 mod imp {
     use std::cell::{Cell, RefCell};
+
+    use once_cell::sync::OnceCell;
 
     use crate::util::TemplateCallbacks;
 
@@ -51,6 +53,8 @@ mod imp {
         pub focus_mode: Cell<bool>,
         #[property(get, set)]
         pub should_collapse: Cell<bool>,
+
+        pub(super) settings: OnceCell<gio::Settings>,
     }
 
     impl PrismaTimerWindow {
@@ -109,14 +113,30 @@ mod imp {
 
             obj.set_timer_state_machine(data::TimerStateMachine::new());
 
+            obj.setup_settings();
             obj.setup_gactions();
             obj.setup_event_controllers();
             obj.setup_list();
+
+            obj.load_window_size();
         }
     }
 
     impl WidgetImpl for PrismaTimerWindow {}
-    impl WindowImpl for PrismaTimerWindow {}
+
+    impl WindowImpl for PrismaTimerWindow {
+        fn close_request(&self) -> glib::Propagation {
+            let obj = self.obj();
+
+            let result = obj.save_window_size();
+            if let Err(e) = result {
+                log::error!("Failed to save window state. cause: {}", e);
+            }
+
+            glib::Propagation::Proceed
+        }
+    }
+
     impl ApplicationWindowImpl for PrismaTimerWindow {}
     impl AdwApplicationWindowImpl for PrismaTimerWindow {}
 }
@@ -133,6 +153,15 @@ impl PrismaTimerWindow {
         glib::Object::builder()
             .property("application", application)
             .build()
+    }
+
+    fn setup_settings(&self) {
+        let imp = self.imp();
+
+        let settings = gio::Settings::new(config::APP_ID);
+        imp.settings
+            .set(settings)
+            .expect("`settings` should not be set before `setup_settings` is called");
     }
 
     fn setup_gactions(&self) {
@@ -231,6 +260,38 @@ impl PrismaTimerWindow {
 
         imp.list_view.set_model(Some(&selection_model));
         imp.list_view.set_factory(Some(&factory));
+    }
+
+    fn settings(&self) -> &gio::Settings {
+        self.imp()
+            .settings
+            .get()
+            .expect("`settings` should be set by `setup_settings` first")
+    }
+
+    fn save_window_size(&self) -> Result<(), glib::BoolError> {
+        let settings = self.settings();
+
+        let height = self.height();
+        let width = self.width();
+        let is_maximized = self.is_maximized();
+
+        settings.set_int("window-height", height)?;
+        settings.set_int("window-width", width)?;
+        settings.set_boolean("window-is-maximized", is_maximized)?;
+
+        Ok(())
+    }
+
+    fn load_window_size(&self) {
+        let settings = self.settings();
+
+        let height = settings.int("window-height");
+        let width = settings.int("window-width");
+        let is_maximized = settings.boolean("window-is-maximized");
+
+        self.set_default_size(width, height);
+        self.set_maximized(is_maximized);
     }
 
     fn timer_state_changed_cb(&self, state: TimerState) {

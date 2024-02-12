@@ -23,14 +23,19 @@ use gtk::prelude::*;
 use gtk::{gio, glib};
 
 use crate::config::{APP_ID, VERSION};
+use crate::ui;
 use crate::PrismaTimerWindow;
 
 #[doc(hidden)]
 mod imp {
+    use once_cell::sync::OnceCell;
+
     use super::*;
 
     #[derive(Debug, Default)]
-    pub struct PrismaTimerApplication {}
+    pub struct PrismaTimerApplication {
+        pub(super) settings: OnceCell<gio::Settings>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for PrismaTimerApplication {
@@ -43,6 +48,8 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
             let obj = self.obj();
+
+            obj.setup_settings();
             obj.setup_gactions();
             obj.setup_shortcuts();
         }
@@ -55,6 +62,9 @@ mod imp {
         // to do that, we'll just present any existing window.
         fn activate(&self) {
             let application = self.obj();
+
+            application.update_color_scheme();
+
             // Get the current window or create one if necessary
             let window = if let Some(window) = application.active_window() {
                 window
@@ -86,23 +96,55 @@ impl PrismaTimerApplication {
             .build()
     }
 
+    fn setup_settings(&self) {
+        let imp = self.imp();
+
+        let settings = gio::Settings::new(APP_ID);
+
+        imp.settings
+            .set(settings.clone())
+            .expect("`settings` should not be set before `setup_settings` is called");
+
+        settings.connect_changed(
+            Some("use-system-color-scheme"),
+            glib::clone!(@weak self as obj => move |_, _| {
+                obj.update_color_scheme();
+            }),
+        );
+
+        settings.connect_changed(
+            Some("dark-mode"),
+            glib::clone!(@weak self as obj => move |_, _| {
+                obj.update_color_scheme();
+            }),
+        );
+    }
+
     fn setup_gactions(&self) {
-        let quit_action = gio::ActionEntry::builder("quit")
-            .activate(move |app: &Self, _, _| app.quit())
-            .build();
-        let about_action = gio::ActionEntry::builder("about")
-            .activate(move |app: &Self, _, _| app.show_about())
-            .build();
-        self.add_action_entries([quit_action, about_action]);
+        self.add_action_entries([
+            gio::ActionEntry::builder("quit")
+                .activate(move |app: &Self, _, _| app.quit())
+                .build(),
+            gio::ActionEntry::builder("about")
+                .activate(move |app: &Self, _, _| app.show_about())
+                .build(),
+            gio::ActionEntry::builder("preferences")
+                .activate(move |app: &Self, _, _| app.show_preferences())
+                .build(),
+        ]);
     }
 
     fn setup_shortcuts(&self) {
         self.set_accels_for_action("app.quit", &["<primary>q"]);
+        self.set_accels_for_action("app.preferences", &["<primary>comma"]);
         self.set_accels_for_action("win.show-help-overlay", &["<primary>question"]);
     }
 
     fn show_about(&self) {
-        let window = self.active_window().unwrap();
+        let window = self
+            .active_window()
+            .expect("an active window must be set for this application");
+
         let about = adw::AboutWindow::builder()
             .transient_for(&window)
             .application_name("Prisma Timer")
@@ -114,5 +156,41 @@ impl PrismaTimerApplication {
             .build();
 
         about.present();
+    }
+
+    fn show_preferences(&self) {
+        let window = self
+            .active_window()
+            .expect("an active window must be set for this application");
+
+        let preferences_window = ui::PreferencesWindow::new(&window);
+
+        preferences_window.present();
+    }
+
+    fn settings(&self) -> &gio::Settings {
+        self.imp()
+            .settings
+            .get()
+            .expect("`settings` should be set by `setup_settings` first")
+    }
+
+    fn update_color_scheme(&self) {
+        let manager = adw::StyleManager::default();
+        let settings = self.settings();
+
+        let supported = manager.system_supports_color_schemes();
+        let use_system = settings.boolean("use-system-color-scheme");
+        let dark_mode = settings.boolean("dark-mode");
+
+        let color_scheme = if supported && use_system {
+            adw::ColorScheme::Default
+        } else if dark_mode {
+            adw::ColorScheme::ForceDark
+        } else {
+            adw::ColorScheme::ForceLight
+        };
+
+        manager.set_color_scheme(color_scheme);
     }
 }
