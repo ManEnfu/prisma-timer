@@ -52,6 +52,13 @@ mod imp {
         #[property(get, set = Self::set_last_solve, nullable)]
         pub last_solve: RefCell<Option<data::SessionItem>>,
         last_solve_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+
+        #[property(get, set = Self::set_timer_settings, nullable)]
+        pub timer_settings: RefCell<Option<data::TimerSettings>>,
+        pub timer_settings_bindings: RefCell<Vec<glib::Binding>>,
+
+        pub key_events: RefCell<Option<gtk::EventControllerKey>>,
+        pub gestures: RefCell<Option<gtk::GestureClick>>,
     }
 
     impl TimerFace {
@@ -140,6 +147,31 @@ mod imp {
                 .map(|sm| sm.is_running())
                 .unwrap_or_default()
         }
+
+        fn set_timer_settings(&self, v: Option<data::TimerSettings>) {
+            let obj = self.obj();
+            let mut bindings = self.timer_settings_bindings.borrow_mut();
+
+            if let Some(_settings) = self.timer_settings.take() {
+                for binding in bindings.drain(..) {
+                    binding.unbind();
+                }
+            }
+
+            if let Some(settings) = &v {
+                if let Some(gestures) = self.gestures.borrow().as_ref() {
+                    bindings.push(
+                        settings
+                            .bind_property("timer-touch-only", gestures, "touch-only")
+                            .sync_create()
+                            .build(),
+                    );
+                }
+            }
+
+            self.timer_settings.replace(v.clone());
+            obj.set_timer_state_machine_provider(v);
+        }
     }
 
     #[glib::object_subclass]
@@ -203,6 +235,8 @@ glib::wrapper! {
 #[gtk::template_callbacks]
 impl TimerFace {
     fn setup_event_controllers(&self) {
+        let imp = self.imp();
+
         let key_events = gtk::EventControllerKey::new();
         key_events.connect_key_pressed(glib::clone!(@weak self as obj => @default-return glib::Propagation::Proceed, move |_, key, _, modifier| {
             if modifier.is_empty() && key == gdk::Key::space {
@@ -219,7 +253,8 @@ impl TimerFace {
                 }
             }),
         );
-        self.add_controller(key_events);
+        self.add_controller(key_events.clone());
+        imp.key_events.replace(Some(key_events));
 
         let gestures = gtk::GestureClick::new();
         gestures.set_touch_only(false);
@@ -234,7 +269,8 @@ impl TimerFace {
         gestures.connect_cancel(glib::clone!(@weak self as obj => move |_, _| {
             obj.cancel_cb();
         }));
-        self.add_controller(gestures);
+        self.add_controller(gestures.clone());
+        imp.gestures.replace(Some(gestures));
     }
 
     fn pressed_cb(&self) {

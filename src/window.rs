@@ -79,9 +79,8 @@ mod imp {
             self.parent_constructed();
             let obj = self.obj();
 
-            self.timer_face.set_timer_state_machine_provider(Some(
-                data::TimerStateMachineSettingsProvider::new(),
-            ));
+            self.timer_face
+                .set_timer_settings(Some(data::TimerSettings::new()));
 
             obj.setup_settings();
             obj.setup_gactions();

@@ -11,12 +11,12 @@ pub use solve_data::SolveData;
 pub use solve_time::SolveTime;
 pub use statistics::SolveStatistic;
 pub use timer_content::{TimerContent, TimerContentColor, TimerContentValue};
+pub use timer_settings::TimerSettings;
 pub use timer_state::IsTimerState;
 pub use timer_state_machine::{TimerStateMachine, TimerStateMachineExt, TimerStateMachineImpl};
 pub use timer_state_machine_provider::{
     TimerStateMachineProvider, TimerStateMachineProviderExt, TimerStateMachineProviderImpl,
 };
-pub use timer_state_machine_settings_provider::TimerStateMachineSettingsProvider;
 
 mod countdown_timer_state_machine;
 mod penalty;
@@ -27,10 +27,10 @@ mod solve_data;
 mod solve_time;
 mod statistics;
 mod timer_content;
+mod timer_settings;
 mod timer_state;
 mod timer_state_machine;
 mod timer_state_machine_provider;
-mod timer_state_machine_settings_provider;
 
 pub const TICK_INTERVAL: Duration = Duration::from_millis(10);
 pub const INSPECTION_TIME: Duration = Duration::from_secs(17);
