@@ -1,7 +1,10 @@
 use gtk::glib;
 
 use crate::{
-    data::{IsTimerState, TimerContent, TimerContentColor, TimerStateMachine},
+    data::{
+        IsTimerState, SolveTime, TimerContent, TimerContentColor, TimerContentValue,
+        TimerStateMachine,
+    },
     prelude::*,
 };
 
@@ -39,7 +42,7 @@ impl IsTimerState for Ready {
 
     fn content(&self) -> TimerContent {
         TimerContent {
-            value: None,
+            value: Some(TimerContentValue::SolveTime(SolveTime::ZERO)),
             color: TimerContentColor::Success,
         }
     }
