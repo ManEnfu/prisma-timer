@@ -7,6 +7,7 @@ use crate::subclass::prelude::*;
 use gtk::{gio, glib};
 
 #[doc(hidden)]
+#[allow(clippy::enum_variant_names)]
 mod imp {
     use std::marker::PhantomData;
 

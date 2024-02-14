@@ -94,11 +94,7 @@ impl PreferencesWindow {
         let settings = self.settings();
 
         settings
-            .bind(
-                "timer-touch-only",
-                &*imp.timer_touch_only_switch,
-                "active",
-            )
+            .bind("timer-touch-only", &*imp.timer_touch_only_switch, "active")
             .build();
 
         settings
