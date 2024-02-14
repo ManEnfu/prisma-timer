@@ -18,6 +18,11 @@ pub struct SolveTime {
 }
 
 impl SolveTime {
+    pub const ZERO: Self = Self {
+        time: Duration::ZERO,
+        penalty: Penalty::Ok,
+    };
+
     pub const DNF: Self = Self {
         time: Duration::ZERO,
         penalty: Penalty::Dnf,
